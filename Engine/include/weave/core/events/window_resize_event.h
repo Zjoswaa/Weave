@@ -1,9 +1,9 @@
 #ifndef WEAVE_WINDOW_RESIZE_EVENT_H
 #define WEAVE_WINDOW_RESIZE_EVENT_H
 
-#include "Weave/PCH.h"
+#include "weave/PCH.h"
 
-#include "Weave/Core/Events/Event.h"
+#include "weave/core/events/event.h"
 
 namespace Weave {
     class WindowResizeEvent final : public Event {
@@ -13,29 +13,29 @@ namespace Weave {
             this->height = height;
         }
 
-        [[nodiscard]] Type GetType() const override {
-            return Type::WindowResize;
+        [[nodiscard]] EventType get_type() const override {
+            return EventType::WindowResize;
         }
 
-        [[nodiscard]] uint32_t GetCategories() const override {
-            return static_cast<uint32_t>(Category::Application);
+        [[nodiscard]] EventCategory get_categories() const override {
+            return EventCategory::Application;
         }
 
-        [[nodiscard]] const char* GetName() const override {
+        [[nodiscard]] const char* get_name() const override {
             return "WindowResizeEvent";
         }
 
-        [[nodiscard]] std::string ToString() const override {
+        [[nodiscard]] std::string to_string() const override {
             std::stringstream ss;
             ss << "KeyPressedEvent { width: " << this->width << ", height: " <<  this->height << " }";
             return ss.str();
         }
 
-        [[nodiscard]] inline uint32_t GetWidth() const {
+        [[nodiscard]] inline uint32_t get_width() const {
             return this->width;
         }
 
-        [[nodiscard]] inline uint32_t GetHeight() const {
+        [[nodiscard]] inline uint32_t get_height() const {
             return this->height;
         }
 

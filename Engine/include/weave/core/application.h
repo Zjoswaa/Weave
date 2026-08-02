@@ -1,7 +1,7 @@
 #ifndef WEAVE_APPLICATION_H
 #define WEAVE_APPLICATION_H
 
-#include "Weave/PCH.h"
+#include "weave/PCH.h"
 
 namespace Weave {
     class Application {
@@ -9,11 +9,11 @@ namespace Weave {
         Application();
         virtual ~Application();
 
-        virtual void Run();
+        virtual void run();
     };
 
     // Implemented by client
-    std::unique_ptr<Application> CreateApplication(int argc, char** argv);
+    std::unique_ptr<Application> create_application(int argc, char** argv);
 }
 
 #endif

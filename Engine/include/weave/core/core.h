@@ -2,8 +2,8 @@
 #define WEAVE_CORE_H
 
 namespace Weave {
-    void InitCore();
-    void ShutdownCore();
+    void init_core();
+    void shutdown_core();
 }
 
 #define BIT(x) (1u << x)

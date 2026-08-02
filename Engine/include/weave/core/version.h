@@ -28,7 +28,7 @@
     #define WEAVE_COMPILER_NAME "GCC"
 #elifdef WEAVE_COMPILER_MSVC
     #define WEAVE_COMPILER_NAME "MSVC"
-#else WEAVE_COMPILER_UNKNOWN
+#else
     #define WEAVE_COMPILER_NAME "Unknown"
 #endif
 
