@@ -1,7 +1,7 @@
 #ifndef WEAVE_KEYCODE_H
 #define WEAVE_KEYCODE_H
 
-#include "Weave/PCH.h"
+#include "weave/PCH.h"
 
 namespace Weave {
     enum class KeyCode : uint16_t {

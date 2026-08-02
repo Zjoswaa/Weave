@@ -13,8 +13,10 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/vendor/glfw/include/
 )
 
+target_link_libraries(Engine PRIVATE glfw)
+
 target_precompile_headers(
         ${PROJECT_NAME}
         PRIVATE
-        include/Weave/PCH.h
+        include/weave/PCH.h
 )

@@ -1,4 +1,4 @@
-#include <Weave.h>
+#include <weave.h>
 
 class Sandbox : public Weave::Application {
 public:
@@ -31,8 +31,8 @@ public:
         WEAVE_LOG_CORE_ERROR_TAG("Core", "Error");
         WEAVE_LOG_CORE_CRITICAL_TAG("Core", "Critical");
 
-        Weave::KeyPressEvent keyPressEvent(WV_KEY_W, 1);
-        WEAVE_LOG_INFO("{}", keyPressEvent.ToString());
+        Weave::KeyPressEvent key_press_event(WV_KEY_W, 1);
+        WEAVE_LOG_INFO("{}", key_press_event.to_string());
 
         // CR_ASSERT(true, "True test");
         // CR_ASSERT(false, "False test {}", 3);
@@ -40,9 +40,9 @@ public:
 
     ~Sandbox() override = default;
 
-    // void Run() override {}
+    // void run() override {}
 };
 
-std::unique_ptr<Weave::Application> Weave::CreateApplication(int argc, char** argv) {
+std::unique_ptr<Weave::Application> Weave::create_application(int argc, char** argv) {
     return std::make_unique<Sandbox>(argc, argv);
 }
