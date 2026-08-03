@@ -26,7 +26,7 @@ namespace Weave {
 
         [[nodiscard]] std::string to_string() const override {
             std::stringstream ss;
-            ss << "KeyPressedEvent { key_code: " << this->key_code << ", repeat_count: " << this->repeat_count << " }";
+            ss << "KeyPressEvent { key_code: " << this->key_code << ", repeat_count: " << this->repeat_count << " }";
             return ss.str();
         }
 

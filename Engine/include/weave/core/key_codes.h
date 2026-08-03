@@ -5,6 +5,8 @@
 
 namespace Weave {
     enum class KeyCode : uint16_t {
+        Unknown = 0,
+
         A = 1,
         B = 2,
         C = 3,
@@ -62,56 +64,62 @@ namespace Weave {
         Slash = 52,
 
         CapsLock = 53,
+        ScrollLock = 54,
+        NumLock = 55,
+        PrintScreen = 56,
+        Pause = 57,
 
-        F1 = 54,
-        F2 = 55,
-        F3 = 56,
-        F4 = 57,
-        F5 = 58,
-        F6 = 59,
-        F7 = 60,
-        F8 = 61,
-        F9 = 62,
-        F10 = 63,
-        F11 = 64,
-        F12 = 65,
+        F1 = 58,
+        F2 = 59,
+        F3 = 60,
+        F4 = 61,
+        F5 = 62,
+        F6 = 63,
+        F7 = 64,
+        F8 = 65,
+        F9 = 66,
+        F10 = 67,
+        F11 = 68,
+        F12 = 69,
 
-        Home = 66,
-        PageUp = 67,
-        Delete = 68,
-        End = 69,
-        PageDown = 70,
-        Right = 71,
-        Left = 72,
-        Down = 73,
-        Up = 74,
-        NumLock = 75,
+        PageUp = 70,
+        PageDown = 71,
+        Insert = 72,
+        Home = 73,
+        Delete = 74,
+        End = 75,
 
-        KeyPadDivide = 76,
-        KeyPadMultiply = 77,
-        KeyPadMinus = 78,
-        KeyPadPlus = 79,
-        KeyPadReturn = 80,
-        KeyPad1 = 81,
-        KeyPad2 = 82,
-        KeyPad3 = 83,
-        KeyPad4 = 84,
-        KeyPad5 = 85,
-        KeyPad6 = 86,
-        KeyPad7 = 87,
-        KeyPad8 = 88,
-        KeyPad9 = 89,
-        KeyPad0 = 90,
-        KeyPadPeriod = 91,
+        Left = 76,
+        Right = 77,
+        Up = 78,
+        Down = 79,
 
-        LeftControl = 92,
-        LeftShift = 93,
-        LeftAlt = 94,
-        LeftSuper = 95,
-        RightControl = 96,
-        RightShift = 97,
-        RightAlt = 98,
-        RightSuper = 99,
+        KeyPadDivide = 80,
+        KeyPadMultiply = 81,
+        KeyPadSubtract = 82,
+        KeyPadAdd = 83,
+        KeyPadReturn = 84,
+        KeyPad1 = 85,
+        KeyPad2 = 86,
+        KeyPad3 = 87,
+        KeyPad4 = 88,
+        KeyPad5 = 89,
+        KeyPad6 = 90,
+        KeyPad7 = 91,
+        KeyPad8 = 92,
+        KeyPad9 = 93,
+        KeyPad0 = 94,
+        KeyPadPeriod = 95,
+
+        LeftControl = 96,
+        LeftShift = 97,
+        LeftAlt = 98,
+        LeftSuper = 99,
+        RightControl = 100,
+        RightShift = 101,
+        RightAlt = 102,
+        RightSuper = 103,
+        Menu = 104
     };
 
     enum class MouseButton : uint16_t {
@@ -189,7 +197,11 @@ namespace Weave {
 #define WV_KEY_PERIOD Weave::KeyCode::Period
 #define WV_KEY_SLASH Weave::KeyCode::Slash
 
-#define WV_KEY_CAPS_LOCK Crescent::KeyCode::CapsLock
+#define WV_KEY_CAPS_LOCK Weave::KeyCode::CapsLock
+#define WV_KEY_SCROLL_LOCK Weave::KeyCode::ScrollLock
+#define WV_KEY_NUM_LOCK Weave::KeyCode::NumLock
+#define WV_KEY_PRINT_SCREEN Weave::KeyCode::PrintScreen
+#define WV_KEY_PAUSE Weave::KeyCode::Pause
 
 #define WV_KEY_F1 Weave::KeyCode::F1
 #define WV_KEY_F2 Weave::KeyCode::F2
@@ -204,21 +216,22 @@ namespace Weave {
 #define WV_KEY_F11 Weave::KeyCode::F11
 #define WV_KEY_F12 Weave::KeyCode::F12
 
-#define WV_KEY_HOME Weave::KeyCode::Home
 #define WV_KEY_PAGE_UP Weave::KeyCode::PageUp
+#define WV_KEY_PAGE_DOWN Weave::KeyCode::PageDown
+#define WV_KEY_INSERT Weave::KeyCode::Insert
+#define WV_KEY_HOME Weave::KeyCode::Home
 #define WV_KEY_DELETE Weave::KeyCode::Delete
 #define WV_KEY_END Weave::KeyCode::End
-#define WV_KEY_PAGE_DOWN Weave::KeyCode::PageDown
-#define WV_KEY_RIGHT Weave::KeyCode::Right
+
 #define WV_KEY_LEFT Weave::KeyCode::Left
-#define WV_KEY_DOWN Weave::KeyCode::Down
+#define WV_KEY_RIGHT Weave::KeyCode::Right
 #define WV_KEY_UP Weave::KeyCode::Up
-#define WV_KEY_NUM_LOCK Weave::KeyCode::NumLock
+#define WV_KEY_DOWN Weave::KeyCode::Down
 
 #define WV_KEY_KP_DIVIDE Weave::KeyCode::KeyPadDivide
 #define WV_KEY_KP_MULTIPLY Weave::KeyCode::KeyPadMultiply
-#define WV_KEY_KP_MINUS Weave::KeyCode::KeyPadMinus
-#define WV_KEY_KP_PLUS Weave::KeyCode::KeyPadPlus
+#define WV_KEY_KP_SUBTRACT Weave::KeyCode::KeyPadSubtract
+#define WV_KEY_KP_ADD Weave::KeyCode::KeyPadAdd
 #define WV_KEY_KP_RETURN Weave::KeyCode::KeyPadReturn
 #define WV_KEY_KP_1 Weave::KeyCode::KeyPad1
 #define WV_KEY_KP_2 Weave::KeyCode::KeyPad2
@@ -240,6 +253,7 @@ namespace Weave {
 #define WV_KEY_RIGHT_SHIFT Weave::KeyCode::RightShift
 #define WV_KEY_RIGHT_ALT Weave::KeyCode::RightAlt /* Alt, Option */
 #define WV_KEY_RIGHT_SUPER Weave::KeyCode::RightSuper /* Windows, Command, Meta */
+#define WV_KEY_MENU Weave::KeyCode::Menu
 
 #define WV_MOUSE_BUTTON_LEFT Weave::MouseButton::Left
 #define WV_MOUSE_BUTTON_MIDDLE Weave::MouseButton::Middle

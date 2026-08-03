@@ -27,7 +27,7 @@ namespace Weave {
 
         [[nodiscard]] std::string to_string() const override {
             std::stringstream ss;
-            ss << "KeyPressedEvent { width: " << this->width << ", height: " <<  this->height << " }";
+            ss << "WindowResizeEvent { width: " << this->width << ", height: " <<  this->height << " }";
             return ss.str();
         }
 
