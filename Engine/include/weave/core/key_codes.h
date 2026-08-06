@@ -123,11 +123,16 @@ namespace Weave {
     };
 
     enum class MouseButton : uint16_t {
+        Unknown = 0,
+
         Left = 1,
-        Middle = 2,
-        Right = 3,
+        Right = 2,
+        Middle = 3,
         Button4 = 4,
-        Button5 = 5
+        Button5 = 5,
+        Button6 = 6,
+        Button7 = 7,
+        Button8 = 8
     };
 
     inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode) {
@@ -256,9 +261,12 @@ namespace Weave {
 #define WV_KEY_MENU Weave::KeyCode::Menu
 
 #define WV_MOUSE_BUTTON_LEFT Weave::MouseButton::Left
-#define WV_MOUSE_BUTTON_MIDDLE Weave::MouseButton::Middle
 #define WV_MOUSE_BUTTON_RIGHT Weave::MouseButton::Right
+#define WV_MOUSE_BUTTON_MIDDLE Weave::MouseButton::Middle
 #define WV_MOUSE_BUTTON_4 Weave::MouseButton::Button4
 #define WV_MOUSE_BUTTON_5 Weave::MouseButton::Button5
+#define WV_MOUSE_BUTTON_6 Weave::MouseButton::Button6
+#define WV_MOUSE_BUTTON_7 Weave::MouseButton::Button7
+#define WV_MOUSE_BUTTON_8 Weave::MouseButton::Button8
 
 #endif

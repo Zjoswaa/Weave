@@ -1,10 +1,12 @@
-project(Engine CXX)
+project(Engine CXX C)
 
 file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS include/*.h)
-file(GLOB_RECURSE VENDOR_SOURCES vendor/glad/*.c)
+file(GLOB_RECURSE VENDOR_SOURCES ${CMAKE_SOURCE_DIR}/vendor/glad/*.c)
 
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS})
+set_source_files_properties(${VENDOR_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
+add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${VENDOR_SOURCES})
 
 target_include_directories(
         ${PROJECT_NAME}
