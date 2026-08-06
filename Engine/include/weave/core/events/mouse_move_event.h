@@ -8,7 +8,7 @@
 namespace Weave {
     class MouseMoveEvent final : public Event {
     public:
-        MouseMoveEvent(const float x, const float y, const float delta_x, const float delta_y) {
+        MouseMoveEvent(const double x, const double y, const double delta_x, const double delta_y) {
             this->x = x;
             this->y = y;
             this->delta_x = delta_x;
@@ -34,10 +34,10 @@ namespace Weave {
         }
 
     private:
-        float x;
-        float y;
-        float delta_x;
-        float delta_y;
+        double x;
+        double y;
+        double delta_x;
+        double delta_y;
     };
 }
 

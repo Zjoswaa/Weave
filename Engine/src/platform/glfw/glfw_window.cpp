@@ -6,17 +6,43 @@
 #include "weave/core/events/window_close_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
+#include "weave/platform/opengl/opengl_context.h"
 
-#include "glad/glad.h"
+#define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
+#include "glad/glad.h"
+#include "weave/core/events/mouse_button_press_event.h"
+#include "weave/core/events/mouse_button_release_event.h"
+#include "weave/core/events/mouse_move_event.h"
 
 namespace Weave {
     static bool glfw_initialized = false;
     static std::array<Weave::KeyCode, GLFW_KEY_LAST + 1> key_lookup_table;
     static bool key_lookup_table_initialized = false;
 
+    static std::array<Weave::MouseButton, GLFW_MOUSE_BUTTON_LAST + 1> mouse_button_lookup_table;
+    static bool mouse_button_lookup_table_initialized = false;
+
+
     static void glfw_error_callback(int error, const char* description) {
         WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Error ({}): {}", error, description);
+    }
+
+    static void init_mouse_button_lookup_table() {
+        if (mouse_button_lookup_table_initialized) {
+            return;
+        }
+
+        mouse_button_lookup_table.fill(Weave::MouseButton::Unknown);
+
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_LEFT] = Weave::MouseButton::Left;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_RIGHT] = Weave::MouseButton::Right;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_MIDDLE] = Weave::MouseButton::Middle;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_4] = Weave::MouseButton::Button4;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_5] = Weave::MouseButton::Button5;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_6] = Weave::MouseButton::Button6;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_7] = Weave::MouseButton::Button7;
+        mouse_button_lookup_table[GLFW_MOUSE_BUTTON_8] = Weave::MouseButton::Button8;
     }
 
     static void init_key_lookup_table() {
@@ -130,8 +156,6 @@ namespace Weave {
         key_lookup_table[GLFW_KEY_RIGHT_ALT] = Weave::KeyCode::RightAlt;
         key_lookup_table[GLFW_KEY_RIGHT_SUPER] = Weave::KeyCode::RightSuper;
         key_lookup_table[GLFW_KEY_MENU] = Weave::KeyCode::Menu;
-
-        key_lookup_table_initialized = true;
     }
 
     GlfwWindow::GlfwWindow(const WindowSpecification& spec) {
@@ -140,14 +164,6 @@ namespace Weave {
 
     GlfwWindow::~GlfwWindow() {
         this->shutdown();
-    }
-
-    void GlfwWindow::process_events() {
-        glfwPollEvents();
-    }
-
-    void GlfwWindow::swap_buffers() {
-        glfwSwapBuffers(this->window);
     }
 
     void GlfwWindow::init() {
@@ -163,7 +179,7 @@ namespace Weave {
 
             int success = glfwInit();
             if (success != GLFW_TRUE) {
-                WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to initialize");
+                WEAVE_LOG_CORE_CRITICAL_TAG("GLFW", "Failed to initialize");
                 glfwTerminate();
                 return;
             }
@@ -176,11 +192,17 @@ namespace Weave {
             key_lookup_table_initialized = true;
         }
 
+        if (!mouse_button_lookup_table_initialized) {
+            init_mouse_button_lookup_table();
+            mouse_button_lookup_table_initialized = true;
+        }
+
         // TODO: Add rendering API selection (OpenGL, Vulkan, etc.) and set the appropriate window hints based on the selected API.
         // For example, if using Vulkan, you would set the GLFW_CLIENT_API hint to GLFW_NO_API:
         // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+        glfwWindowHint(GLFW_DECORATED, this->spec.decorated ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, this->spec.resizable ? GLFW_TRUE : GLFW_FALSE);
 
         if (this->spec.fullscreen) {
             GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
@@ -209,7 +231,10 @@ namespace Weave {
             return;
         }
 
-        glfwMakeContextCurrent(this->window);
+        this->graphics_context = GraphicsContext::create(this);
+        this->graphics_context->init();
+
+        // glfwMakeContextCurrent(this->window);
 
         glfwSetWindowUserPointer(this->window, &this->window_data);
 
@@ -275,6 +300,52 @@ namespace Weave {
                 }
             }
         });
+
+        glfwSetCursorPosCallback(this->window, [](GLFWwindow* window, double xpos, double ypos) {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+            Weave::MouseMoveEvent event(xpos, ypos, xpos - data.last_mouse_x, ypos - data.last_mouse_y);
+            data.last_mouse_x = xpos;
+            data.last_mouse_y = ypos;
+            data.event_callback(event);
+        });
+
+        glfwSetMouseButtonCallback(this->window, [](GLFWwindow* window, int button, int action, int mods) {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+            if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) {
+                WEAVE_LOG_CORE_WARN_TAG("GLFW", "Mouse button {} is out of range (0-{})", button, GLFW_MOUSE_BUTTON_LAST);
+                return;
+            }
+
+            Weave::MouseButton mouse_button = mouse_button_lookup_table[button];
+
+            if (mouse_button == Weave::MouseButton::Unknown) {
+                WEAVE_LOG_CORE_WARN_TAG("GLFW", "Unknown mouse button {}", button);
+                return;
+            }
+
+            switch (action) {
+                case GLFW_PRESS: {
+                    Weave::MouseButtonPressEvent event(mouse_button);
+                    data.event_callback(event);
+                    break;
+                }
+                case GLFW_RELEASE: {
+                    Weave::MouseButtonReleaseEvent event(mouse_button);
+                    data.event_callback(event);
+                    break;
+                }
+            }
+        });
+    }
+
+    void GlfwWindow::process_events() {
+        glfwPollEvents();
+    }
+
+    void GlfwWindow::swap_buffers() {
+        glfwSwapBuffers(this->window);
     }
 
     void GlfwWindow::shutdown() {
@@ -283,5 +354,20 @@ namespace Weave {
             glfwTerminate();
             glfw_initialized = false;
         }
+    }
+
+    void GlfwWindow::maximize() const {
+        glfwMaximizeWindow(this->window);
+    }
+
+    void GlfwWindow::center() const {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        const uint32_t x = mode->width / 2 - this->window_data.width / 2;
+        const uint32_t y = mode->height / 2 - this->window_data.height / 2;
+        glfwSetWindowPos(this->window, static_cast<int>(x), static_cast<int>(y));
+    }
+
+    void GlfwWindow::set_resizable(const bool resizable) const {
+        glfwSetWindowAttrib(this->window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
     }
 }

@@ -19,6 +19,12 @@
       "args": [
         "--build", "build"
       ],
+      "options": {
+        "env": {
+          "LD_LIBRARY_PATH": "/run/opengl-driver/lib:/run/current-system/sw/share/nix-ld/lib",
+          "LIBGL_DRIVERS_PATH": "/run/opengl-driver/lib/dri"
+        }
+      },
       "dependsOn": "CMake: Configure"
     },
     {
@@ -35,6 +41,17 @@
           "--build", "build",
           "--target", "clean"
       ]
+    },
+    {
+      "label": "Env Debug",
+      "type": "shell",
+      "command": "env | grep -iE 'LD_LIBRARY_PATH|LIBGL'",
+      "options": {
+        "env": {
+          "LD_LIBRARY_PATH": "/run/opengl-driver/lib:/run/current-system/sw/share/nix-ld/lib",
+          "LIBGL_DRIVERS_PATH": "/run/opengl-driver/lib/dri"
+        }
+      }
     }
   ]
 }
