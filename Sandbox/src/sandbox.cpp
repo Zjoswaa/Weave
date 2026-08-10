@@ -40,7 +40,11 @@ std::unique_ptr<Weave::Application> Weave::create_application(int argc, char** a
     WEAVE_LOG_INFO_TAG("Sandbox", "Weave::create_application()");
 
     ApplicationSpecification spec;
+    #ifdef WEAVE_PLATFORM_WINDOWS
+    spec.window_decorated = true;
+    #else
     spec.window_decorated = false;
+    #endif
     spec.window_fullscreen = false;
     spec.window_maximized = false;
     spec.window_resizable = true;
