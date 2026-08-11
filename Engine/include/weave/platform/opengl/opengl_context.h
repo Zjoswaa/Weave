@@ -11,6 +11,7 @@ namespace Weave {
         virtual ~OpenGlContext();
 
         void init() override;
+        void swap_buffers() override;
 
     private:
         virtual void shutdown();

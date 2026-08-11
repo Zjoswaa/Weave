@@ -28,6 +28,9 @@ namespace Weave {
         ApplicationSpecification spec;
         std::unique_ptr<Window> window;
         bool running = true;
+
+        // Temporary raw OpenGL handles
+        unsigned int VAO, VBO, shader_program = 0;
     };
 
     // Implemented by client

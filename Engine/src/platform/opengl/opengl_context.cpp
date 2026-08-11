@@ -31,5 +31,9 @@ namespace Weave {
         WEAVE_LOG_CORE_INFO("  Version:  {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     }
 
+    void OpenGlContext::swap_buffers() {
+        glfwSwapBuffers(static_cast<GLFWwindow*>(this->window->get_native_window()));
+    }
+
     void OpenGlContext::shutdown() { }
 }

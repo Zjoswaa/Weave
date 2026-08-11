@@ -6,8 +6,10 @@
 
 int main(const int argc, char** argv) {
     Weave::init_core();
-    const std::unique_ptr<Weave::Application> app = Weave::create_application(argc, argv);
-    app->run();
+    {
+        const std::unique_ptr<Weave::Application> app = Weave::create_application(argc, argv);
+        app->run();
+    }
     Weave::shutdown_core();
     return 0;
 }
