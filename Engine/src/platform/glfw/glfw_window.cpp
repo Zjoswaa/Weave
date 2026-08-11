@@ -345,7 +345,8 @@ namespace Weave {
     }
 
     void GlfwWindow::swap_buffers() {
-        glfwSwapBuffers(this->window);
+        this->graphics_context->swap_buffers();
+        // glfwSwapBuffers(this->window);
     }
 
     void GlfwWindow::shutdown() {
