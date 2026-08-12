@@ -2,7 +2,10 @@
 #define WEAVE_APPLICATION_H
 
 #include "weave/PCH.h"
+#include "weave/core/layer.h"
+#include "weave/core/layer_stack.h"
 #include "weave/core/window.h"
+#include "weave/imgui/imgui_layer.h"
 
 namespace Weave {
     struct ApplicationSpecification {
@@ -22,15 +25,24 @@ namespace Weave {
 
         void run();
 
-        virtual void on_event(const Weave::Event& event);
+        virtual void on_event(Weave::Event& event);
+
+        void push_layer(Layer* layer);
+        void push_overlay(Layer* layer);
+        void pop_layer(Layer* layer);
+        void pop_overlay(Layer* layer);
+
+        inline Window& get_window() { return *this->window; }
+        static inline Application& get() { return *instance; }
 
     private:
         ApplicationSpecification spec;
         std::unique_ptr<Window> window;
         bool running = true;
+        LayerStack layer_stack;
+        ImGuiLayer* imgui_layer;
 
-        // Temporary raw OpenGL handles
-        unsigned int VAO, VBO, shader_program = 0;
+        static Application* instance;
     };
 
     // Implemented by client

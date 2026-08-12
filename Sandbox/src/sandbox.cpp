@@ -1,9 +1,13 @@
 #include <weave.h>
 
+#include "sandbox_layer.h"
+
 class Sandbox : public Weave::Application {
 public:
     Sandbox(const Weave::ApplicationSpecification& spec) : Application(spec) {
         WEAVE_LOG_INFO_TAG("Sandbox", "Sandbox::Sandbox()");
+
+        push_layer(new SandboxLayer());
         // WEAVE_LOG_TRACE("Trace");
         // WEAVE_LOG_DEBUG("Debug");
         // WEAVE_LOG_INFO("Info");

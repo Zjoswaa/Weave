@@ -23,7 +23,7 @@ namespace Weave {
         void center() const override;
         void set_resizable(bool resizable) const override;
 
-        void set_event_callback(const std::function<void(const Weave::Event&)>& callback) override { this->window_data.event_callback = callback; }
+        void set_event_callback(const std::function<void(Weave::Event&)>& callback) override { this->window_data.event_callback = callback; }
 
         inline void* get_native_window() const override { return this->window; }
 
