@@ -34,6 +34,10 @@ target_include_directories(
 
 target_link_libraries(Engine PRIVATE glfw)
 
+if(WIN32)
+    target_link_libraries(Engine PRIVATE dwmapi)
+endif()
+
 target_precompile_headers(
         ${PROJECT_NAME}
         PRIVATE

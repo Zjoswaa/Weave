@@ -10,6 +10,11 @@
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
+#ifdef WEAVE_PLATFORM_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <dwmapi.h>
+#endif
 #include "glad/glad.h"
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
@@ -230,6 +235,15 @@ namespace Weave {
             WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to create window");
             return;
         }
+
+        #ifdef WEAVE_PLATFORM_WINDOWS
+        #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+        #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+        #endif
+        HWND hwnd = glfwGetWin32Window(this->window);
+        BOOL use_dark_mode = TRUE;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+        #endif
 
         this->graphics_context = GraphicsContext::create(this);
         this->graphics_context->init();
