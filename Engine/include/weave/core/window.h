@@ -34,7 +34,7 @@ namespace Weave {
         virtual void center() const = 0;
         virtual void set_resizable(bool resizable) const = 0;
 
-        virtual void set_event_callback(const std::function<void(const Weave::Event&)>& callback) = 0;
+        virtual void set_event_callback(const std::function<void(Weave::Event&)>& callback) = 0;
 
         inline virtual void* get_native_window() const = 0;
 
