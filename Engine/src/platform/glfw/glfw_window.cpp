@@ -248,15 +248,38 @@ namespace Weave {
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
         #endif
 
-        // Set icon
+        // Set window icon
         {
-            GLFWimage icon;
+            GLFWimage icons[6];
             int channels;
 
-            icon.pixels = stbi_load("assets/icons/weave.png", &icon.width, &icon.height, &channels, 4);
-            if (icon.pixels) {
-                glfwSetWindowIcon(this->window, 1, &icon);
-                stbi_image_free(icon.pixels);
+            icons[0].pixels = stbi_load("assets/icons/W_16.png", &icons[0].width, &icons[0].height, &channels, 4);
+            icons[1].pixels = stbi_load("assets/icons/W_32.png", &icons[1].width, &icons[1].height, &channels, 4);
+            icons[2].pixels = stbi_load("assets/icons/W_64.png", &icons[2].width, &icons[2].height, &channels, 4);
+            icons[3].pixels = stbi_load("assets/icons/W_128.png", &icons[3].width, &icons[3].height, &channels, 4);
+            icons[4].pixels = stbi_load("assets/icons/W_256.png", &icons[4].width, &icons[4].height, &channels, 4);
+            icons[5].pixels = stbi_load("assets/icons/W_512.png", &icons[5].width, &icons[5].height, &channels, 4);
+            if (icons[0].pixels && icons[1].pixels && icons[2].pixels && icons[3].pixels && icons[4].pixels && icons[5].pixels) {
+                glfwSetWindowIcon(this->window, 6, icons);
+            }
+            
+            if (icons[0].pixels) {
+                stbi_image_free(icons[0].pixels);
+            }
+            if (icons[1].pixels) {
+                stbi_image_free(icons[1].pixels);
+            }
+            if (icons[2].pixels) {
+                stbi_image_free(icons[2].pixels);
+            }
+            if (icons[3].pixels) {
+                stbi_image_free(icons[3].pixels);
+            }
+            if (icons[4].pixels) {
+                stbi_image_free(icons[4].pixels);
+            }
+            if (icons[5].pixels) {
+                stbi_image_free(icons[5].pixels);
             }
         }
 
