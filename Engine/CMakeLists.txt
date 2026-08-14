@@ -14,7 +14,6 @@ file(GLOB_RECURSE VENDOR_SOURCES
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
-
 set_source_files_properties(${VENDOR_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${VENDOR_SOURCES})
