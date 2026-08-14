@@ -16,6 +16,8 @@
 #include <dwmapi.h>
 #endif
 #include "glad/glad.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
 #include "weave/core/events/mouse_move_event.h"
@@ -236,6 +238,7 @@ namespace Weave {
             return;
         }
 
+        // Set window titlebar dark mode on Windows
         #ifdef WEAVE_PLATFORM_WINDOWS
         #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
         #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
@@ -244,6 +247,18 @@ namespace Weave {
         BOOL use_dark_mode = TRUE;
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
         #endif
+
+        // Set icon
+        {
+            GLFWimage icon;
+            int channels;
+
+            icon.pixels = stbi_load("assets/icons/weave.png", &icon.width, &icon.height, &channels, 4);
+            if (icon.pixels) {
+                glfwSetWindowIcon(this->window, 1, &icon);
+                stbi_image_free(icon.pixels);
+            }
+        }
 
         this->graphics_context = GraphicsContext::create(this);
         this->graphics_context->init();

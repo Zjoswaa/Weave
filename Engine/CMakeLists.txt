@@ -30,6 +30,7 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/vendor/glad/include/
         ${CMAKE_SOURCE_DIR}/vendor/imgui/
         ${CMAKE_SOURCE_DIR}/vendor/imgui/backends/
+        ${CMAKE_SOURCE_DIR}/vendor/stb/
 )
 
 target_link_libraries(Engine PRIVATE glfw)
