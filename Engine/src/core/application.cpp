@@ -44,6 +44,8 @@ namespace Weave {
             layer->on_detach();
             delete layer;
         }
+
+        delete this->imgui_layer;
     };
 
     void Application::on_event(Weave::Event& event) {

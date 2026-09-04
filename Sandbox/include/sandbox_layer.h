@@ -2,6 +2,11 @@
 #define WEAVE_SANDBOX_LAYER_H
 
 #include "weave/core/layer.h"
+#include "weave/renderer/vertex_buffer.h"
+#include "weave/renderer/index_buffer.h"
+#include "weave/renderer/shader.h"
+
+#include <memory>
 
 class SandboxLayer : public Weave::Layer {
 public:
@@ -15,7 +20,10 @@ public:
     void on_imgui_render() override;
 
 private:
-    unsigned int VAO, VBO, shader_program = 0;
+    std::shared_ptr<Weave::Shader> shader;
+    std::shared_ptr<Weave::VertexBuffer> vertex_buffer;
+    std::shared_ptr<Weave::IndexBuffer> index_buffer;
+    unsigned int VAO;
 };
 
 #endif

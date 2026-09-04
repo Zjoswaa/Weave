@@ -6,71 +6,58 @@
 SandboxLayer::SandboxLayer() : Layer("SandboxLayer") { }
 
 void SandboxLayer::on_attach() {
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
     float vertices[] = {
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
          0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
          0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
     };
+    
+    this->vertex_buffer.reset(Weave::VertexBuffer::create(vertices, sizeof(vertices)));
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
 
+    uint32_t indices[] = { 0, 1, 2 };
+    this->index_buffer.reset(Weave::IndexBuffer::create(indices, 3));
+    
     const char* vertex_shader_source = R"(
-            #version 330 core
-            layout (location = 0) in vec3 aPos;
-            layout (location = 1) in vec3 color;
-            out vec3 vertexColor;
-            void main() {
-                gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-                vertexColor = color;
-            }
-        )";
-    unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-    glCompileShader(vertex_shader);
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        layout (location = 1) in vec3 color;
+        out vec3 vertexColor;
+        void main() {
+            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+            vertexColor = color;
+        }
+    )";
 
     const char* fragment_shader_source = R"(
-            #version 330 core
-            out vec4 FragColor;
-            in vec3 vertexColor;
-            void main() {
-                FragColor = vec4(vertexColor, 1.0f);
-            }
-        )";
-    unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-    glCompileShader(fragment_shader);
+        #version 330 core
+        out vec4 FragColor;
+        in vec3 vertexColor;
+        void main() {
+            FragColor = vec4(vertexColor, 1.0f);
+        }
+    )";
 
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    this->shader.reset(Weave::Shader::create(vertex_shader_source, fragment_shader_source));
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void SandboxLayer::on_detach() {
     glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shader_program);
 }
 
 void SandboxLayer::on_update() {
-    glUseProgram(shader_program);
+    this->shader->bind();
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, this->index_buffer->get_count(), GL_UNSIGNED_INT, nullptr);
 }
 
 void SandboxLayer::on_event(Weave::Event& event) {
