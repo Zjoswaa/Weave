@@ -8,6 +8,7 @@ public:
         WEAVE_LOG_INFO_TAG("Sandbox", "Sandbox::Sandbox()");
 
         push_layer(new SandboxLayer());
+
         // WEAVE_LOG_TRACE("Trace");
         // WEAVE_LOG_DEBUG("Debug");
         // WEAVE_LOG_INFO("Info");
