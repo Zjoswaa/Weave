@@ -22,10 +22,10 @@ namespace Weave {
         window_spec.fullscreen = spec.window_fullscreen;
         window_spec.resizable = spec.window_resizable;
         this->window = Window::create(window_spec);
-        this->window->init();
         this->window->set_event_callback([this](Weave::Event& event) {
             this->on_event(event);
         });
+        this->window->init();
 
         if (spec.window_maximized && !spec.window_fullscreen) {
             this->window->maximize();
