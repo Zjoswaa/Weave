@@ -253,12 +253,13 @@ namespace Weave {
             GLFWimage icons[6];
             int channels;
 
-            icons[0].pixels = stbi_load("assets/icons/W_16.png", &icons[0].width, &icons[0].height, &channels, 4);
-            icons[1].pixels = stbi_load("assets/icons/W_32.png", &icons[1].width, &icons[1].height, &channels, 4);
-            icons[2].pixels = stbi_load("assets/icons/W_64.png", &icons[2].width, &icons[2].height, &channels, 4);
-            icons[3].pixels = stbi_load("assets/icons/W_128.png", &icons[3].width, &icons[3].height, &channels, 4);
-            icons[4].pixels = stbi_load("assets/icons/W_256.png", &icons[4].width, &icons[4].height, &channels, 4);
-            icons[5].pixels = stbi_load("assets/icons/W_512.png", &icons[5].width, &icons[5].height, &channels, 4);
+            icons[0].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_16.png").string().c_str(), &icons[0].width, &icons[0].height, &channels, 4);
+            icons[1].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_32.png").string().c_str(), &icons[1].width, &icons[1].height, &channels, 4);
+            icons[2].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_64.png").string().c_str(), &icons[2].width, &icons[2].height, &channels, 4);
+            icons[3].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_128.png").string().c_str(), &icons[3].width, &icons[3].height, &channels, 4);
+            icons[4].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_256.png").string().c_str(), &icons[4].width, &icons[4].height, &channels, 4);
+            icons[5].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_512.png").string().c_str(), &icons[5].width, &icons[5].height, &channels, 4);
+
             if (icons[0].pixels && icons[1].pixels && icons[2].pixels && icons[3].pixels && icons[4].pixels && icons[5].pixels) {
                 glfwSetWindowIcon(this->window, 6, icons);
             }

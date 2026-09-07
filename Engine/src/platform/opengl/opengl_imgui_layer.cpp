@@ -21,7 +21,7 @@ namespace Weave {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-        io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMonoNL-Regular.ttf", 18.f);
+        io.Fonts->AddFontFromFileTTF((std::filesystem::path(ASSETS_DIR) / "fonts" / "JetBrainsMonoNL-Regular.ttf").string().c_str(), 18.f);
         io.FontDefault = io.Fonts->Fonts.back();
 
         ImGui::StyleColorsDark();
