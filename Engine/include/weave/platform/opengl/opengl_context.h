@@ -1,5 +1,5 @@
 #ifndef WEAVE_OPENGL_CONTEXT_H
-#define  WEAVE_OPENGL_CONTEXT_H
+#define WEAVE_OPENGL_CONTEXT_H
 
 #include "weave/renderer/graphics_context.h"
 #include "weave/core/window.h"

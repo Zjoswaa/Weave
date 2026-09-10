@@ -1,4 +1,5 @@
 #include "weave/PCH.h"
+#include "weave/renderer/buffer_layout.h"
 #include "weave/platform/opengl/opengl_vertex_buffer.h"
 
 #include <glad/glad.h>
@@ -20,5 +21,13 @@ namespace Weave {
     
     void OpenGlVertexBuffer::unbind() const {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    const BufferLayout& OpenGlVertexBuffer::get_layout() const {
+        return this->layout;
+    }
+
+    void OpenGlVertexBuffer::set_layout(const BufferLayout& layout) {
+        this->layout = layout;
     }
 }
