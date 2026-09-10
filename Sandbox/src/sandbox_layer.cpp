@@ -6,8 +6,7 @@
 SandboxLayer::SandboxLayer() : Layer("SandboxLayer") { }
 
 void SandboxLayer::on_attach() {
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    this->vertex_array.reset(Weave::VertexArray::create());
 
     float vertices[] = {
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -17,13 +16,16 @@ void SandboxLayer::on_attach() {
     
     this->vertex_buffer.reset(Weave::VertexBuffer::create(vertices, sizeof(vertices)));
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
+    Weave::BufferLayout layout = {
+        { Weave::ShaderDataType::Float3, "aPos" },
+        { Weave::ShaderDataType::Float3, "color" }
+    };
+    this->vertex_buffer->set_layout(layout);
+    this->vertex_array->add_vertex_buffer(this->vertex_buffer);
 
     uint32_t indices[] = { 0, 1, 2 };
     this->index_buffer.reset(Weave::IndexBuffer::create(indices, 3));
+    this->vertex_array->set_index_buffer(this->index_buffer);
     
     const char* vertex_shader_source = R"(
         #version 330 core
@@ -56,8 +58,7 @@ void SandboxLayer::on_detach() {
 
 void SandboxLayer::on_update() {
     this->shader->bind();
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, this->index_buffer->get_count(), GL_UNSIGNED_INT, nullptr);
+    Weave::Renderer::draw_indexed(this->vertex_array);
 }
 
 void SandboxLayer::on_event(Weave::Event& event) {

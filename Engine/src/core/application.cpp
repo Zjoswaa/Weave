@@ -4,6 +4,7 @@
 #include "weave/core/log.h"
 #include "weave/core/window.h"
 #include "weave/imgui/imgui_layer.h"
+#include "weave/renderer/renderer.h"
 
 #include <glad/glad.h>
 
@@ -49,7 +50,7 @@ namespace Weave {
     };
 
     void Application::on_event(Weave::Event& event) {
-        WEAVE_LOG_CORE_INFO_TAG("Event", "{}", event.to_string());
+        WEAVE_LOG_CORE_TRACE_TAG("Event", "{}", event.to_string());
 
         if (event.get_type() == EventType::WindowClose) {
             WEAVE_LOG_CORE_INFO_TAG("Application", "Exiting application.");
@@ -90,8 +91,10 @@ namespace Weave {
         while(this->running) {
             // Cornflower blue
             // glClearColor(0.38823529f, 0.58431372f, 0.93333333f, 1.0f);
-            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+            Renderer::set_clear_color(0.2f, 0.2f, 0.2f, 1.0f);
+            //glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            Renderer::clear();
+            //glClear(GL_COLOR_BUFFER_BIT);
 
             for (Layer* layer : this->layer_stack) {
                 layer->on_update();
