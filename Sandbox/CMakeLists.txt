@@ -6,6 +6,8 @@ set(PROJECT_RC ${CMAKE_SOURCE_DIR}/app.rc)
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RC})
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+
 target_include_directories(
         ${PROJECT_NAME}
         PRIVATE

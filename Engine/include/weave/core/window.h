@@ -31,8 +31,14 @@ namespace Weave {
         virtual uint32_t get_height() const = 0;
 
         virtual void maximize() const = 0;
+        virtual bool is_maximized() const = 0;
+        virtual void minimize() const = 0;
+        virtual void restore() const = 0;
         virtual void center() const = 0;
         virtual void set_resizable(bool resizable) const = 0;
+        virtual void set_title_bar_drag_offset(int32_t left, int32_t right) = 0;
+        inline virtual int32_t get_title_bar_drag_offset_left() const = 0;
+        inline virtual int32_t get_title_bar_drag_offset_right() const = 0;
 
         virtual void set_event_callback(const std::function<void(Weave::Event&)>& callback) = 0;
 

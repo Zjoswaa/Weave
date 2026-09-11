@@ -20,8 +20,14 @@ namespace Weave {
         uint32_t get_height() const override { return this->window_data.height; }
 
         void maximize() const override;
+        bool is_maximized() const override;
+        void minimize() const override;
+        void restore() const override;
         void center() const override;
         void set_resizable(bool resizable) const override;
+        void set_title_bar_drag_offset(int32_t left, int32_t right);
+        inline int32_t get_title_bar_drag_offset_left() const override { return this->window_data.title_bar_drag_offset_left; }
+        inline int32_t get_title_bar_drag_offset_right() const override { return this->window_data.title_bar_drag_offset_right; }
 
         void set_event_callback(const std::function<void(Weave::Event&)>& callback) override { this->window_data.event_callback = callback; }
 
@@ -41,6 +47,8 @@ namespace Weave {
         struct WindowData {
             std::string title;
             uint32_t width, height;
+            int32_t title_bar_drag_offset_left = 0;
+            int32_t title_bar_drag_offset_right = 0;
             // bool vsync;
             std::function<void(Weave::Event&)> event_callback;
             uint32_t key_repeat_counts[GLFW_KEY_LAST + 1] = {0};

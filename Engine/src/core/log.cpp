@@ -29,7 +29,8 @@ namespace Weave {
 
     void Log::set_default_tag_info() {
         tag_info_map = {
-            std::pair<const std::string, TagInfo>("Core", TagInfo(true, Level::Trace))
+            std::pair<const std::string, TagInfo>("Core", TagInfo(true, Level::Trace)),
+            std::pair<const std::string, TagInfo>("Event", TagInfo(true, Level::Info))
         };
     }
 }
