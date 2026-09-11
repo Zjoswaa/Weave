@@ -24,6 +24,7 @@ namespace Weave {
         virtual ~Application();
 
         void run();
+        void close();
 
         virtual void on_event(Weave::Event& event);
 

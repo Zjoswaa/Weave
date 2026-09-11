@@ -13,6 +13,9 @@ namespace Weave {
             case RendererAPI::API::OpenGL:
                 Renderer::renderer_api = new OpenGlRendererAPI();
                 break;
+            default:
+                WEAVE_LOG_CORE_CRITICAL_TAG("Renderer", "Failed to initialize, no API selected");
+                break;
         }
 
         if (Renderer::renderer_api) {

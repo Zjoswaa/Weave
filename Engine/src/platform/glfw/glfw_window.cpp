@@ -1,5 +1,6 @@
 #include "weave/PCH.h"
 #include "weave/platform/glfw/glfw_window.h"
+#include "weave/core/application.h"
 #include "weave/core/key_codes.h"
 #include "weave/core/log.h"
 #include "weave/core/events/window_resize_event.h"
@@ -13,6 +14,8 @@
 #ifdef WEAVE_PLATFORM_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <windows.h>
+#include <windowsx.h>
 #include <dwmapi.h>
 #endif
 #include "glad/glad.h"
@@ -21,6 +24,35 @@
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
 #include "weave/core/events/mouse_move_event.h"
+
+#ifdef WEAVE_PLATFORM_WINDOWS
+static WNDPROC s_original_wndproc = nullptr;
+
+static LRESULT CALLBACK CustomTitlebarHitTest(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    if (uMsg == WM_NCHITTEST) {
+        LRESULT hit = CallWindowProc(s_original_wndproc, hwnd, uMsg, wParam, lParam);
+
+        if (hit == HTCLIENT) {
+            POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+            ScreenToClient(hwnd, &pt);
+
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+
+            int title_bar_height = 30;
+
+            if (pt.y < title_bar_height &&
+                (pt.x > Weave::Application::get().get_window().get_title_bar_drag_offset_left() &&
+                 pt.x < rc.right - Weave::Application::get().get_window().get_title_bar_drag_offset_right())) {
+                return HTCAPTION;
+            }
+        }
+        return hit;
+    }
+
+    return CallWindowProc(s_original_wndproc, hwnd, uMsg, wParam, lParam);
+}
+#endif
 
 namespace Weave {
     static bool glfw_initialized = false;
@@ -238,14 +270,17 @@ namespace Weave {
             return;
         }
 
-        // Set window titlebar dark mode on Windows
         #ifdef WEAVE_PLATFORM_WINDOWS
+        // Set window titlebar dark mode on Windows
         #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
         #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
         #endif
         HWND hwnd = glfwGetWin32Window(this->window);
         BOOL use_dark_mode = TRUE;
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+
+        s_original_wndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)CustomTitlebarHitTest);
         #endif
 
         // Set window icon
@@ -414,6 +449,18 @@ namespace Weave {
         glfwMaximizeWindow(this->window);
     }
 
+    bool GlfwWindow::is_maximized() const {
+        return glfwGetWindowAttrib(this->window, GLFW_MAXIMIZED) == GLFW_TRUE ? true : false;
+    }
+
+    void GlfwWindow::minimize() const {
+        glfwIconifyWindow(this->window);
+    }
+
+    void GlfwWindow::restore() const {
+        glfwRestoreWindow(this->window);
+    }
+
     void GlfwWindow::center() const {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         const uint32_t x = mode->width / 2 - this->window_data.width / 2;
@@ -423,5 +470,10 @@ namespace Weave {
 
     void GlfwWindow::set_resizable(const bool resizable) const {
         glfwSetWindowAttrib(this->window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
+    }
+
+    void GlfwWindow::set_title_bar_drag_offset(int32_t left, int32_t right) {
+        this->window_data.title_bar_drag_offset_left = left;
+        this->window_data.title_bar_drag_offset_right = right;
     }
 }
