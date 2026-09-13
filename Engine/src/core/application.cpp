@@ -1,9 +1,9 @@
-#include "weave/PCH.h"
 #include "weave/core/application.h"
+#include "weave/PCH.h"
+#include "weave/core/events/window_resize_event.h"
 #include "weave/core/layer.h"
 #include "weave/core/log.h"
 #include "weave/core/window.h"
-#include "weave/core/events/window_resize_event.h"
 #include "weave/imgui/imgui_layer.h"
 #include "weave/renderer/renderer.h"
 
@@ -24,14 +24,13 @@ namespace Weave {
         window_spec.fullscreen = spec.window_fullscreen;
         window_spec.resizable = spec.window_resizable;
         this->window = Window::create(window_spec);
-        this->window->set_event_callback([this](Weave::Event& event) {
-            this->on_event(event);
-        });
+        this->window->set_event_callback([this](Weave::Event& event) { this->on_event(event); });
         this->window->init();
 
         if (spec.window_maximized && !spec.window_fullscreen) {
             this->window->maximize();
-        } else {
+        }
+        else {
             // this->window->center();
         }
 
@@ -40,6 +39,7 @@ namespace Weave {
     };
 
     Application::~Application() {
+        this->window->set_refresh_callback({});
         WEAVE_LOG_CORE_INFO_TAG("Application", "Application::~Application()");
 
         for (Layer* layer : layer_stack) {
@@ -56,8 +56,12 @@ namespace Weave {
         if (event.get_type() == EventType::WindowClose) {
             this->running = false;
         }
+        else if (event.get_type() == EventType::WindowResize) {
+            auto& resize_event = static_cast<Weave::WindowResizeEvent&>(event);
+            this->minimized = (resize_event.get_width() == 0 || resize_event.get_height() == 0);
+        }
 
-        for (const auto & it : std::views::reverse(this->layer_stack)) {
+        for (const auto& it : std::views::reverse(this->layer_stack)) {
             it->on_event(event);
             if (event.handled) {
                 break;
@@ -88,30 +92,46 @@ namespace Weave {
     void Application::run() {
         WEAVE_LOG_CORE_INFO_TAG("Application", "Application::run()");
 
-        while(this->running) {
-            // Cornflower blue
-            Renderer::set_clear_color(0.38823529f, 0.58431372f, 0.93333333f, 1.0f);
-            //Renderer::set_clear_color(0.2f, 0.2f, 0.2f, 1.0f);
-            Renderer::clear();
-
-            for (Layer* layer : this->layer_stack) {
-                layer->on_update();
-            }
-
-            this->imgui_layer->begin();
-            for (Layer* layer : this->layer_stack) {
-                layer->on_imgui_render();
-            }
-            this->imgui_layer->end();
-
+        this->window->set_refresh_callback([this]() { this->render_frame(); });
+        while (this->running) {
             this->window->process_events();
-            this->window->swap_buffers();
+            this->render_frame();
         }
+        this->window->set_refresh_callback({});
 
         WEAVE_LOG_CORE_INFO_TAG("Application", "Exiting application.");
     }
 
-    void Application::close() {
-        this->running = false;
+    void Application::render_frame() {
+        if (!this->running || this->rendering_frame || this->minimized) {
+            return;
+        }
+        const auto width = this->window->get_framebuffer_width();
+        const auto height = this->window->get_framebuffer_height();
+        this->rendering_frame = true;
+        struct FrameGuard {
+            bool& active;
+            ~FrameGuard() { active = false; }
+        } guard{this->rendering_frame};
+
+        Renderer::set_viewport(0, 0, width, height);
+        // Cornflower blue
+        Renderer::set_clear_color(0.38823529f, 0.58431372f, 0.93333333f, 1.0f);
+        // Renderer::set_clear_color(0.2f, 0.2f, 0.2f, 1.0f);
+        Renderer::clear();
+
+        for (Layer* layer : this->layer_stack) {
+            layer->on_update();
+        }
+
+        this->imgui_layer->begin();
+        for (Layer* layer : this->layer_stack) {
+            layer->on_imgui_render();
+        }
+        this->imgui_layer->end();
+
+        this->window->swap_buffers();
     }
-}
+
+    void Application::close() { this->running = false; }
+} // namespace Weave

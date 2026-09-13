@@ -1,10 +1,10 @@
+#include "weave/platform/opengl/opengl_imgui_layer.h"
 #include "weave/PCH.h"
 #include "weave/core/application.h"
-#include "weave/platform/opengl/opengl_imgui_layer.h"
 
-#include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <imgui.h>
 
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
@@ -16,13 +16,16 @@ namespace Weave {
     void OpenGlImGuiLayer::on_attach() {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-        //io.Fonts->AddFontFromFileTTF((std::filesystem::path(ASSETS_DIR) / "fonts" / "JetBrainsMonoNL-Regular.ttf").string().c_str(), 18.f);
-        io.Fonts->AddFontFromFileTTF((std::filesystem::path(ASSETS_DIR) / "fonts" / "OpenSans-Medium.ttf").string().c_str(), 20.f);
+        // io.Fonts->AddFontFromFileTTF((std::filesystem::path(ASSETS_DIR) / "fonts" /
+        // "JetBrainsMonoNL-Regular.ttf").string().c_str(), 18.f);
+        io.Fonts->AddFontFromFileTTF(
+            (std::filesystem::path(ASSETS_DIR) / "fonts" / "OpenSans-Medium.ttf").string().c_str(), 20.f);
         io.FontDefault = io.Fonts->Fonts.back();
 
         ImGui::StyleColorsDark();
@@ -49,7 +52,13 @@ namespace Weave {
 
     void OpenGlImGuiLayer::begin() {
         ImGui_ImplOpenGL3_NewFrame();
+        //ImGuiIO& io = ImGui::GetIO();
+        //const auto cursor_config = io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange;
+        //if (Application::get().get_window().owns_native_resize_cursor()) {
+        //    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+        //}
         ImGui_ImplGlfw_NewFrame();
+        //io.ConfigFlags = (io.ConfigFlags & ~ImGuiConfigFlags_NoMouseCursorChange) | cursor_config;
         ImGui::NewFrame();
     }
 
