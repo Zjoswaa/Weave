@@ -4,18 +4,24 @@
 #include "weave/core/version.h"
 #include "weave/renderer/renderer.h"
 
-#include <stb_image.h>
+#include <cmath>
 #include <glad/glad.h>
 #include <imgui.h>
+#include <limits>
+#include <stb_image.h>
 // #include "weave/core/log.h"
 
-SandboxLayer::SandboxLayer() : Layer("SandboxLayer") { }
+SandboxLayer::SandboxLayer() : Layer("SandboxLayer") {}
 
 void SandboxLayer::on_attach() {
-    this->menu_icon_id  = this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "W_32.png").string().c_str());
-    this->icon_min_id   = this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "minimize.png").string().c_str());
-    this->icon_max_id   = this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "maximize.png").string().c_str());
-    this->icon_close_id = this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "close.png").string().c_str());
+    this->menu_icon_id =
+        this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "W_32.png").string().c_str());
+    this->icon_min_id =
+        this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "minimize.png").string().c_str());
+    this->icon_max_id =
+        this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "maximize.png").string().c_str());
+    this->icon_close_id =
+        this->load_texture_from_file((std::filesystem::path(ASSETS_DIR) / "icons" / "close.png").string().c_str());
 
     Weave::FramebufferSpecification framebuffer_spec;
     framebuffer_spec.width = 1280;
@@ -24,25 +30,19 @@ void SandboxLayer::on_attach() {
 
     this->vertex_array.reset(Weave::VertexArray::create());
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
-    };
-    
+    float vertices[] = {-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f,
+                        0.0f,  1.0f,  0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f,  1.0f};
+
     this->vertex_buffer.reset(Weave::VertexBuffer::create(vertices, sizeof(vertices)));
 
-    Weave::BufferLayout layout = {
-        { Weave::ShaderDataType::Float3, "aPos" },
-        { Weave::ShaderDataType::Float3, "color" }
-    };
+    Weave::BufferLayout layout = {{Weave::ShaderDataType::Float3, "aPos"}, {Weave::ShaderDataType::Float3, "color"}};
     this->vertex_buffer->set_layout(layout);
     this->vertex_array->add_vertex_buffer(this->vertex_buffer);
 
-    uint32_t indices[] = { 0, 1, 2 };
+    uint32_t indices[] = {0, 1, 2};
     this->index_buffer.reset(Weave::IndexBuffer::create(indices, 3));
     this->vertex_array->set_index_buffer(this->index_buffer);
-    
+
     const char* vertex_shader_source = R"(
         #version 330 core
         layout (location = 0) in vec3 aPos;
@@ -71,13 +71,13 @@ void SandboxLayer::on_attach() {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void SandboxLayer::on_update() {
+void SandboxLayer::on_update() { this->camera.set_position(this->camera_position); }
+
+void SandboxLayer::render_scene() {
     this->framebuffer->bind();
 
     Weave::Renderer::set_clear_color(0.2f, 0.2f, 0.2f, 1.0f);
     Weave::Renderer::clear();
-
-    this->camera.set_position(this->camera_position);
 
     this->shader->bind();
     this->shader->set_mat4("uViewProjection", this->camera.get_view_projection_matrix());
@@ -114,7 +114,8 @@ void SandboxLayer::render_dockspace() {
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove;
         window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
     }
 
@@ -227,21 +228,28 @@ void SandboxLayer::render_viewport() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.f);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.12f, 0.12f, 0.12f, 1.0f));
-    ImGui::Begin("Viewport");
+    const bool visible = ImGui::Begin("Viewport");
 
     ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
     const auto& spec = this->framebuffer->get_specification();
 
-    uint32_t width = static_cast<uint32_t>(viewport_panel_size.x);
-    uint32_t height = static_cast<uint32_t>(viewport_panel_size.y);
+    const ImVec2 scale = ImGui::GetWindowViewport()->FramebufferScale;
+    const double pixel_width = std::floor(viewport_panel_size.x * scale.x);
+    const double pixel_height = std::floor(viewport_panel_size.y * scale.y);
+    if (visible && std::isfinite(pixel_width) && std::isfinite(pixel_height) && pixel_width >= 1 && pixel_height >= 1 &&
+        pixel_width <= std::numeric_limits<int32_t>::max() && pixel_height <= std::numeric_limits<int32_t>::max()) {
+        uint32_t width = static_cast<uint32_t>(pixel_width);
+        uint32_t height = static_cast<uint32_t>(pixel_height);
 
-    if (width > 0 && height > 0 && (spec.width != width || spec.height != height)) {
-        this->framebuffer->resize(width, height);
-        this->camera.set_viewport_size(width, height);
+        if (width > 0 && height > 0 && (spec.width != width || spec.height != height)) {
+            this->framebuffer->resize(width, height);
+            this->camera.set_viewport_size(width, height);
+        }
+
+        this->render_scene();
+        ImTextureID texture_id = (ImTextureID)(intptr_t)this->framebuffer->get_color_attachment_renderer_id();
+        ImGui::Image(texture_id, viewport_panel_size, ImVec2{0, 1}, ImVec2{1, 0});
     }
-
-    ImTextureID texture_id = (ImTextureID)(intptr_t)this->framebuffer->get_color_attachment_renderer_id();
-    ImGui::Image(texture_id, viewport_panel_size, ImVec2{0, 1}, ImVec2{1, 0});
 
     ImGui::End();
     ImGui::PopStyleColor();

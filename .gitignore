@@ -3,3 +3,4 @@ build/
 .idea/
 .vs/
 imgui.ini
+AGENTS.md

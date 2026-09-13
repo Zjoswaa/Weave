@@ -15,7 +15,7 @@ namespace Weave {
     }
 
     void OpenGlContext::init() {
-        WEAVE_LOG_CORE_INFO("Creating graphics context");
+        WEAVE_LOG_CORE_INFO("Creating OpenGL graphics context");
 
         glfwMakeContextCurrent(static_cast<GLFWwindow*>(this->window->get_native_window()));
 
@@ -35,5 +35,7 @@ namespace Weave {
         glfwSwapBuffers(static_cast<GLFWwindow*>(this->window->get_native_window()));
     }
 
-    void OpenGlContext::shutdown() { }
+    void OpenGlContext::shutdown() {
+        WEAVE_LOG_CORE_INFO("Shut down OpenGL graphics context");
+    }
 }

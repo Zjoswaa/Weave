@@ -1,12 +1,11 @@
-#include "weave/PCH.h"
 #include "weave/platform/glfw/glfw_window.h"
-#include "weave/core/application.h"
-#include "weave/core/key_codes.h"
-#include "weave/core/log.h"
-#include "weave/core/events/window_resize_event.h"
-#include "weave/core/events/window_close_event.h"
+#include "weave/PCH.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
+#include "weave/core/events/window_close_event.h"
+#include "weave/core/events/window_resize_event.h"
+#include "weave/core/key_codes.h"
+#include "weave/core/log.h"
 #include "weave/platform/opengl/opengl_context.h"
 
 #define GLFW_INCLUDE_NONE
@@ -14,9 +13,9 @@
 #ifdef WEAVE_PLATFORM_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <dwmapi.h>
 #include <windows.h>
 #include <windowsx.h>
-#include <dwmapi.h>
 #endif
 #include "glad/glad.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -26,31 +25,160 @@
 #include "weave/core/events/mouse_move_event.h"
 
 #ifdef WEAVE_PLATFORM_WINDOWS
-static WNDPROC s_original_wndproc = nullptr;
+namespace {
+    constexpr wchar_t window_state_property[] = L"Weave.WindowState";
+    struct NativeWindowState {
+        WNDPROC original_wndproc;
+        Weave::GlfwWindow* owner;
+        UINT_PTR resize_timer = 0;
+    };
 
-static LRESULT CALLBACK CustomTitlebarHitTest(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    bool is_borderless_window(GLFWwindow* window) {
+        return !glfwGetWindowAttrib(window, GLFW_DECORATED) && !glfwGetWindowMonitor(window);
+    }
+
+    LRESULT resize_hit_test(HWND hwnd, GLFWwindow* window, POINT point) {
+        if (!is_borderless_window(window) || !glfwGetWindowAttrib(window, GLFW_RESIZABLE) || IsZoomed(hwnd)) {
+            return HTCLIENT;
+        }
+        RECT client;
+        GetClientRect(hwnd, &client);
+        ScreenToClient(hwnd, &point);
+        if (!PtInRect(&client, point)) {
+            return HTCLIENT;
+        }
+        const int border = MulDiv(4, GetDpiForWindow(hwnd), 96);
+        const bool left = point.x < border;
+        const bool right = point.x >= client.right - border;
+        const bool top = point.y < border;
+        const bool bottom = point.y >= client.bottom - border;
+        if (top && left)
+            return HTTOPLEFT;
+        if (top && right)
+            return HTTOPRIGHT;
+        if (bottom && left)
+            return HTBOTTOMLEFT;
+        if (bottom && right)
+            return HTBOTTOMRIGHT;
+        if (left)
+            return HTLEFT;
+        if (right)
+            return HTRIGHT;
+        if (top)
+            return HTTOP;
+        if (bottom)
+            return HTBOTTOM;
+        return HTCLIENT;
+    }
+
+    void update_borderless_style(GLFWwindow* window) {
+        if (!is_borderless_window(window)) {
+            return;
+        }
+        const HWND hwnd = glfwGetWin32Window(window);
+        // GLFW omits the sizing style for undecorated windows. Hit codes alone
+        // do not enable Windows' mouse-driven sizing behavior.
+        LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+        if (glfwGetWindowAttrib(window, GLFW_RESIZABLE)) {
+            style |= WS_THICKFRAME;
+        }
+        else {
+            style &= ~WS_THICKFRAME;
+        }
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style);
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+} // namespace
+
+static LRESULT CALLBACK custom_window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    auto* state = static_cast<NativeWindowState*>(GetPropW(hwnd, window_state_property));
+    if (!state) {
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    }
+    auto* window = static_cast<GLFWwindow*>(state->owner->get_native_window());
+    if (uMsg == WM_NCCALCSIZE && is_borderless_window(window)) {
+        auto* rect = wParam ? &reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam)->rgrc[0] : reinterpret_cast<RECT*>(lParam);
+        if (IsZoomed(hwnd)) {
+            MONITORINFO monitor{sizeof(MONITORINFO)};
+            if (GetMonitorInfoW(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &monitor)) {
+                *rect = monitor.rcWork;
+            }
+        }
+        return 0;
+    }
+    if (uMsg == WM_SETCURSOR && state->owner->owns_native_resize_cursor()) {
+        POINT point;
+        GetCursorPos(&point);
+        HCURSOR cursor = nullptr;
+        switch (resize_hit_test(hwnd, window, point)) {
+            case HTLEFT:
+            case HTRIGHT:
+                cursor = LoadCursor(nullptr, IDC_SIZEWE);
+                break;
+            case HTTOP:
+            case HTBOTTOM:
+                cursor = LoadCursor(nullptr, IDC_SIZENS);
+                break;
+            case HTTOPLEFT:
+            case HTBOTTOMRIGHT:
+                cursor = LoadCursor(nullptr, IDC_SIZENWSE);
+                break;
+            case HTTOPRIGHT:
+            case HTBOTTOMLEFT:
+                cursor = LoadCursor(nullptr, IDC_SIZENESW);
+                break;
+        }
+        if (cursor) {
+            SetCursor(cursor);
+            return TRUE;
+        }
+    }
+    if (uMsg == WM_ENTERSIZEMOVE && !state->resize_timer) {
+        state->resize_timer = SetTimer(hwnd, reinterpret_cast<UINT_PTR>(state), 16, nullptr);
+    }
+    else if (uMsg == WM_EXITSIZEMOVE) {
+        if (state->resize_timer) {
+            KillTimer(hwnd, state->resize_timer);
+            state->resize_timer = 0;
+        }
+    }
+    else if (uMsg == WM_TIMER && state->resize_timer && wParam == state->resize_timer) {
+        state->owner->refresh();
+        return 0;
+    }
+
     if (uMsg == WM_NCHITTEST) {
-        LRESULT hit = CallWindowProc(s_original_wndproc, hwnd, uMsg, wParam, lParam);
+        POINT screen_point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+        const LRESULT resize_hit = resize_hit_test(hwnd, window, screen_point);
+        if (resize_hit != HTCLIENT) {
+            return resize_hit;
+        }
+        LRESULT hit = CallWindowProcW(state->original_wndproc, hwnd, uMsg, wParam, lParam);
 
-        if (hit == HTCLIENT) {
+        if (hit == HTCLIENT && !glfwGetWindowAttrib(window, GLFW_DECORATED) && !glfwGetWindowMonitor(window)) {
             POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
             ScreenToClient(hwnd, &pt);
 
             RECT rc;
             GetClientRect(hwnd, &rc);
 
+            if (!PtInRect(&rc, pt)) {
+                return hit;
+            }
+
             int title_bar_height = 30;
 
             if (pt.y < title_bar_height &&
-                (pt.x > Weave::Application::get().get_window().get_title_bar_drag_offset_left() &&
-                 pt.x < rc.right - Weave::Application::get().get_window().get_title_bar_drag_offset_right())) {
+                (pt.x > state->owner->get_title_bar_drag_offset_left() &&
+                 pt.x < rc.right - state->owner->get_title_bar_drag_offset_right())) {
                 return HTCAPTION;
             }
         }
         return hit;
     }
 
-    return CallWindowProc(s_original_wndproc, hwnd, uMsg, wParam, lParam);
+    return CallWindowProcW(state->original_wndproc, hwnd, uMsg, wParam, lParam);
 }
 #endif
 
@@ -197,13 +325,9 @@ namespace Weave {
         key_lookup_table[GLFW_KEY_MENU] = Weave::KeyCode::Menu;
     }
 
-    GlfwWindow::GlfwWindow(const WindowSpecification& spec) {
-        this->spec = spec;
-    }
+    GlfwWindow::GlfwWindow(const WindowSpecification& spec) { this->spec = spec; }
 
-    GlfwWindow::~GlfwWindow() {
-        this->shutdown();
-    }
+    GlfwWindow::~GlfwWindow() { this->shutdown(); }
 
     void GlfwWindow::init() {
         this->window_data.title = this->spec.title;
@@ -236,8 +360,8 @@ namespace Weave {
             mouse_button_lookup_table_initialized = true;
         }
 
-        // TODO: Add rendering API selection (OpenGL, Vulkan, etc.) and set the appropriate window hints based on the selected API.
-        // For example, if using Vulkan, you would set the GLFW_CLIENT_API hint to GLFW_NO_API:
+        // TODO: Add rendering API selection (OpenGL, Vulkan, etc.) and set the appropriate window hints based on the
+        // selected API. For example, if using Vulkan, you would set the GLFW_CLIENT_API hint to GLFW_NO_API:
         // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         glfwWindowHint(GLFW_DECORATED, this->spec.decorated ? GLFW_TRUE : GLFW_FALSE);
@@ -260,9 +384,12 @@ namespace Weave {
             glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
             glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-            this->window = glfwCreateWindow(mode->width, mode->height, this->window_data.title.c_str(), primary_monitor, nullptr);
-        } else {
-            this->window = glfwCreateWindow((int)this->spec.width, this->spec.height, this->window_data.title.c_str(), nullptr, nullptr);
+            this->window =
+                glfwCreateWindow(mode->width, mode->height, this->window_data.title.c_str(), primary_monitor, nullptr);
+        }
+        else {
+            this->window = glfwCreateWindow((int)this->spec.width, this->spec.height, this->window_data.title.c_str(),
+                                            nullptr, nullptr);
         }
 
         if (!this->window) {
@@ -279,8 +406,20 @@ namespace Weave {
         BOOL use_dark_mode = TRUE;
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
 
-        s_original_wndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)CustomTitlebarHitTest);
+        auto* state = new NativeWindowState{reinterpret_cast<WNDPROC>(GetWindowLongPtrW(hwnd, GWLP_WNDPROC)), this};
+        if (SetPropW(hwnd, window_state_property, state)) {
+            SetLastError(0);
+            const auto previous = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(custom_window_proc));
+            if (!previous && GetLastError()) {
+                RemovePropW(hwnd, window_state_property);
+                delete state;
+                WEAVE_LOG_CORE_ERROR_TAG("Window", "Failed to install native window callback");
+            }
+        }
+        else {
+            delete state;
+            WEAVE_LOG_CORE_ERROR_TAG("Window", "Failed to store native window state");
+        }
         #endif
 
         // Set window icon
@@ -288,17 +427,24 @@ namespace Weave {
             GLFWimage icons[6];
             int channels;
 
-            icons[0].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_16.png").string().c_str(), &icons[0].width, &icons[0].height, &channels, 4);
-            icons[1].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_32.png").string().c_str(), &icons[1].width, &icons[1].height, &channels, 4);
-            icons[2].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_64.png").string().c_str(), &icons[2].width, &icons[2].height, &channels, 4);
-            icons[3].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_128.png").string().c_str(), &icons[3].width, &icons[3].height, &channels, 4);
-            icons[4].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_256.png").string().c_str(), &icons[4].width, &icons[4].height, &channels, 4);
-            icons[5].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_512.png").string().c_str(), &icons[5].width, &icons[5].height, &channels, 4);
+            icons[0].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_16.png").string().c_str(),
+                                        &icons[0].width, &icons[0].height, &channels, 4);
+            icons[1].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_32.png").string().c_str(),
+                                        &icons[1].width, &icons[1].height, &channels, 4);
+            icons[2].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_64.png").string().c_str(),
+                                        &icons[2].width, &icons[2].height, &channels, 4);
+            icons[3].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_128.png").string().c_str(),
+                                        &icons[3].width, &icons[3].height, &channels, 4);
+            icons[4].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_256.png").string().c_str(),
+                                        &icons[4].width, &icons[4].height, &channels, 4);
+            icons[5].pixels = stbi_load((std::filesystem::path(ASSETS_DIR) / "icons" / "W_512.png").string().c_str(),
+                                        &icons[5].width, &icons[5].height, &channels, 4);
 
-            if (icons[0].pixels && icons[1].pixels && icons[2].pixels && icons[3].pixels && icons[4].pixels && icons[5].pixels) {
+            if (icons[0].pixels && icons[1].pixels && icons[2].pixels && icons[3].pixels && icons[4].pixels &&
+                icons[5].pixels) {
                 glfwSetWindowIcon(this->window, 6, icons);
             }
-            
+
             if (icons[0].pixels) {
                 stbi_image_free(icons[0].pixels);
             }
@@ -328,7 +474,8 @@ namespace Weave {
 
         if (glfwRawMouseMotionSupported()) {
             glfwSetInputMode(this->window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        } else {
+        }
+        else {
             WEAVE_LOG_CORE_WARN_TAG("Platform", "Raw mouse motion not supported");
         }
 
@@ -336,10 +483,17 @@ namespace Weave {
         glfwSetWindowSizeCallback(this->window, [](GLFWwindow* window, int width, int height) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-            Weave::WindowResizeEvent event((uint32_t)width, (uint32_t)height);
-            data.event_callback(event);
             data.width = width;
             data.height = height;
+            Weave::WindowResizeEvent event((uint32_t)width, (uint32_t)height);
+            data.event_callback(event);
+        });
+
+        glfwSetWindowRefreshCallback(this->window, [](GLFWwindow* window) {
+            auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            if (data.refresh_callback) {
+                data.refresh_callback();
+            }
         });
 
         glfwSetWindowCloseCallback(this->window, [](GLFWwindow* window) {
@@ -365,27 +519,27 @@ namespace Weave {
             }
 
             switch (action) {
-                case GLFW_PRESS: {
-                    data.key_repeat_counts[key] = 0;
+            case GLFW_PRESS: {
+                data.key_repeat_counts[key] = 0;
 
-                    Weave::KeyPressEvent event(keycode, 0);
-                    data.event_callback(event);
-                    break;
-                }
-                case GLFW_RELEASE: {
-                    data.key_repeat_counts[key] = 0;
+                Weave::KeyPressEvent event(keycode, 0);
+                data.event_callback(event);
+                break;
+            }
+            case GLFW_RELEASE: {
+                data.key_repeat_counts[key] = 0;
 
-                    Weave::KeyReleaseEvent event(keycode);
-                    data.event_callback(event);
-                    break;
-                }
-                case GLFW_REPEAT: {
-                    data.key_repeat_counts[key]++;
+                Weave::KeyReleaseEvent event(keycode);
+                data.event_callback(event);
+                break;
+            }
+            case GLFW_REPEAT: {
+                data.key_repeat_counts[key]++;
 
-                    Weave::KeyPressEvent event(keycode, data.key_repeat_counts[key]);
-                    data.event_callback(event);
-                    break;
-                }
+                Weave::KeyPressEvent event(keycode, data.key_repeat_counts[key]);
+                data.event_callback(event);
+                break;
+            }
             }
         });
 
@@ -402,7 +556,8 @@ namespace Weave {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
             if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) {
-                WEAVE_LOG_CORE_WARN_TAG("GLFW", "Mouse button {} is out of range (0-{})", button, GLFW_MOUSE_BUTTON_LAST);
+                WEAVE_LOG_CORE_WARN_TAG("GLFW", "Mouse button {} is out of range (0-{})", button,
+                                        GLFW_MOUSE_BUTTON_LAST);
                 return;
             }
 
@@ -414,22 +569,46 @@ namespace Weave {
             }
 
             switch (action) {
-                case GLFW_PRESS: {
-                    Weave::MouseButtonPressEvent event(mouse_button);
-                    data.event_callback(event);
-                    break;
-                }
-                case GLFW_RELEASE: {
-                    Weave::MouseButtonReleaseEvent event(mouse_button);
-                    data.event_callback(event);
-                    break;
-                }
+            case GLFW_PRESS: {
+                Weave::MouseButtonPressEvent event(mouse_button);
+                data.event_callback(event);
+                break;
+            }
+            case GLFW_RELEASE: {
+                Weave::MouseButtonReleaseEvent event(mouse_button);
+                data.event_callback(event);
+                break;
+            }
             }
         });
+        #ifdef WEAVE_PLATFORM_WINDOWS
+        if (GetPropW(glfwGetWin32Window(this->window), window_state_property)) {
+            update_borderless_style(this->window);
+        }
+        #endif
     }
 
-    void GlfwWindow::process_events() {
-        glfwPollEvents();
+    void GlfwWindow::process_events() { glfwPollEvents(); }
+
+    bool GlfwWindow::owns_native_resize_cursor() const {
+        #ifdef WEAVE_PLATFORM_WINDOWS
+        if (!is_borderless_window(this->window) || !glfwGetWindowAttrib(this->window, GLFW_RESIZABLE)) {
+            return false;
+        }
+        const HWND hwnd = glfwGetWin32Window(this->window);
+        auto* state = static_cast<NativeWindowState*>(GetPropW(hwnd, window_state_property));
+        if (!state || IsZoomed(hwnd) || IsIconic(hwnd)) {
+            return false;
+        }
+        if (state->resize_timer) {
+            return true;
+        }
+        POINT point;
+        return !GetCapture() && GetCursorPos(&point) && WindowFromPoint(point) == hwnd &&
+            resize_hit_test(hwnd, this->window, point) != HTCLIENT;
+        #else
+        return false;
+        #endif
     }
 
     void GlfwWindow::swap_buffers() {
@@ -438,6 +617,19 @@ namespace Weave {
     }
 
     void GlfwWindow::shutdown() {
+        this->window_data.refresh_callback = {};
+        #ifdef WEAVE_PLATFORM_WINDOWS
+        HWND hwnd = glfwGetWin32Window(this->window);
+        auto* state = static_cast<NativeWindowState*>(GetPropW(hwnd, window_state_property));
+        if (state) {
+            if (state->resize_timer) {
+                KillTimer(hwnd, state->resize_timer);
+            }
+            SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(state->original_wndproc));
+            RemovePropW(hwnd, window_state_property);
+            delete state;
+        }
+        #endif
         glfwDestroyWindow(this->window);
         if (glfw_initialized) {
             glfwTerminate();
@@ -445,21 +637,33 @@ namespace Weave {
         }
     }
 
-    void GlfwWindow::maximize() const {
-        glfwMaximizeWindow(this->window);
+    void GlfwWindow::maximize() const { glfwMaximizeWindow(this->window); }
+
+    uint32_t GlfwWindow::get_framebuffer_width() const {
+        int width, height;
+        glfwGetFramebufferSize(this->window, &width, &height);
+        return glfwGetWindowAttrib(this->window, GLFW_ICONIFIED) ? 0 : static_cast<uint32_t>(width);
+    }
+
+    uint32_t GlfwWindow::get_framebuffer_height() const {
+        int width, height;
+        glfwGetFramebufferSize(this->window, &width, &height);
+        return glfwGetWindowAttrib(this->window, GLFW_ICONIFIED) ? 0 : static_cast<uint32_t>(height);
+    }
+
+    void GlfwWindow::refresh() {
+        if (this->window_data.refresh_callback) {
+            this->window_data.refresh_callback();
+        }
     }
 
     bool GlfwWindow::is_maximized() const {
         return glfwGetWindowAttrib(this->window, GLFW_MAXIMIZED) == GLFW_TRUE ? true : false;
     }
 
-    void GlfwWindow::minimize() const {
-        glfwIconifyWindow(this->window);
-    }
+    void GlfwWindow::minimize() const { glfwIconifyWindow(this->window); }
 
-    void GlfwWindow::restore() const {
-        glfwRestoreWindow(this->window);
-    }
+    void GlfwWindow::restore() const { glfwRestoreWindow(this->window); }
 
     void GlfwWindow::center() const {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -470,10 +674,13 @@ namespace Weave {
 
     void GlfwWindow::set_resizable(const bool resizable) const {
         glfwSetWindowAttrib(this->window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
+#ifdef WEAVE_PLATFORM_WINDOWS
+        update_borderless_style(this->window);
+#endif
     }
 
     void GlfwWindow::set_title_bar_drag_offset(int32_t left, int32_t right) {
         this->window_data.title_bar_drag_offset_left = left;
         this->window_data.title_bar_drag_offset_right = right;
     }
-}
+} // namespace Weave

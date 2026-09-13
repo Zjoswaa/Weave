@@ -48,6 +48,10 @@ namespace Weave {
         Renderer::renderer_api->set_clear_color(r, g, b, a);
     }
 
+    void Renderer::set_viewport(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {
+
+    }
+
     void Renderer::draw_indexed(const std::shared_ptr<VertexArray>& vertex_array) {
         Renderer::renderer_api->draw_indexed(vertex_array);
     }

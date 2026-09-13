@@ -21,7 +21,7 @@ public:
     virtual ~SandboxLayer() = default;
 
     void on_attach() override;
-    //void on_detach() override;
+    // void on_detach() override;
     void on_update() override;
     void on_event(Weave::Event& event) override;
     void on_imgui_render() override;
@@ -34,11 +34,12 @@ private:
     std::shared_ptr<Weave::Framebuffer> framebuffer;
 
     Weave::Camera camera;
-    glm::vec3 camera_position { 0.0f, 0.0f, 1.0f };
+    glm::vec3 camera_position{0.0f, 0.0f, 1.0f};
 
     void render_dockspace();
     void render_menu_bar();
     void render_viewport();
+    void render_scene();
     void render_settings();
     void render_about_menu();
 

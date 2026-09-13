@@ -37,6 +37,9 @@ namespace Weave {
         static inline Application& get() { return *instance; }
 
     private:
+        void render_frame();
+        bool rendering_frame = false;
+        bool minimized = false;
         ApplicationSpecification spec;
         std::unique_ptr<Window> window;
         bool running = true;
@@ -48,6 +51,6 @@ namespace Weave {
 
     // Implemented by client
     std::unique_ptr<Application> create_application(int argc, char** argv);
-}
+} // namespace Weave
 
 #endif

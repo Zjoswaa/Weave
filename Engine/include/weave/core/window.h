@@ -29,6 +29,10 @@ namespace Weave {
 
         virtual uint32_t get_width() const = 0;
         virtual uint32_t get_height() const = 0;
+        virtual uint32_t get_framebuffer_width() const = 0;
+        virtual uint32_t get_framebuffer_height() const = 0;
+        virtual void set_refresh_callback(const std::function<void()>& callback) = 0;
+        virtual bool owns_native_resize_cursor() const { return false; }
 
         virtual void maximize() const = 0;
         virtual bool is_maximized() const = 0;

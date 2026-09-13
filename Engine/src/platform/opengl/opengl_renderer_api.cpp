@@ -21,6 +21,10 @@ namespace Weave {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
+    void OpenGlRendererAPI::set_viewport(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {
+        glViewport(x, y, width, height);
+    }
+
     void OpenGlRendererAPI::draw_indexed(const std::shared_ptr<VertexArray>& vertex_array) {
         vertex_array->bind();
         glDrawElements(GL_TRIANGLES, vertex_array->get_index_buffer()->get_count(), GL_UNSIGNED_INT, nullptr);
