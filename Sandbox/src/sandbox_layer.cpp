@@ -288,7 +288,7 @@ void SandboxLayer::render_about_menu() {
     ImGui::SetNextWindowSize({200, 70}, ImGuiCond_FirstUseEver);
     ImGui::Begin("About Weave", &this->show_about_menu, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking);
 
-    ImGui::Text(std::format("Weave {}", WEAVE_VERSION).c_str());
+    ImGui::Text("Weave %s", WEAVE_VERSION);
 
     ImGui::End();
 }
