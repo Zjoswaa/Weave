@@ -9,7 +9,9 @@ namespace Weave {
         std::string title = "Window";
         uint32_t width = 1280;
         uint32_t height = 720;
+        bool decorated = true;
         bool fullscreen = false;
+        bool resizable = true;
     };
 
     class Window {
@@ -23,7 +25,13 @@ namespace Weave {
         [[nodiscard]] virtual uint32_t get_width() const = 0;
         [[nodiscard]] virtual uint32_t get_height() const = 0;
 
-        virtual void set_event_callback(const std::function<void(Weave::Event&)>& callback) = 0;
+        virtual void maximize() const = 0;
+        virtual void center() const = 0;
+        virtual void set_resizable(bool resizable) const = 0;
+
+        virtual void set_event_callback(const std::function<void(const Weave::Event&)>& callback) = 0;
+
+        inline virtual void* get_native_window() const = 0;
 
         static std::unique_ptr<Window> create(const WindowSpecification& spec = WindowSpecification());
     };

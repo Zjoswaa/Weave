@@ -2,7 +2,7 @@
 
 class Sandbox : public Weave::Application {
 public:
-    Sandbox(int argc, char** argv) {
+    Sandbox(const Weave::ApplicationSpecification& spec) : Application(spec) {
         WEAVE_LOG_INFO_TAG("Sandbox", "Sandbox()::Sandbox()");
         // WEAVE_LOG_TRACE("Trace");
         // WEAVE_LOG_DEBUG("Debug");
@@ -45,5 +45,8 @@ public:
 };
 
 std::unique_ptr<Weave::Application> Weave::create_application(int argc, char** argv) {
-    return std::make_unique<Sandbox>(argc, argv);
+    ApplicationSpecification spec;
+    spec.window_resizable = false;
+
+    return std::make_unique<Sandbox>(spec);
 }

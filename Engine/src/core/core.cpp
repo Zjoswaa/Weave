@@ -1,5 +1,4 @@
 #include "weave/core/core.h"
-
 #include "weave/core/log.h"
 #include "weave/core/version.h"
 

@@ -1,8 +1,6 @@
 #ifndef WEAVE_ENTRYPOINT_H
 #define WEAVE_ENTRYPOINT_H
 
-#include <memory>
-
 #include "core/application.h"
 #include "core/core.h"
 

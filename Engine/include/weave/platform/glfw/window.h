@@ -2,6 +2,8 @@
 #define WEAVE_GLFW_WINDOW_H
 
 #include "weave/core/window.h"
+#include "weave/renderer/graphics_context.h"
+
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #ifdef WEAVE_PLATFORM_WINDOWS
@@ -23,13 +25,29 @@ namespace Weave::GLFW {
         [[nodiscard]] uint32_t get_width() const override { return this->window_data.width; }
         [[nodiscard]] uint32_t get_height() const override { return this->window_data.height; }
 
-        void set_event_callback(const std::function<void(Weave::Event&)>& callback) override { this->window_data.event_callback = callback; }
+        void maximize() const override;
+        void center() const override;
+        void set_resizable(bool resizable) const override;
+
+        void set_event_callback(const std::function<void(const Weave::Event&)>& callback) override {
+            this->window_data.event_callback = callback;
+        }
+
+        /**
+         * Get a reference to the underlying GLFWwindow.
+         *
+         * @return A pointer to the owned GLFWwindow.
+         */
+        inline void* get_native_window() const override {
+            return this->window;
+        }
 
     private:
         void shutdown() const;
 
     private:
         GLFWwindow* window;
+        std::unique_ptr<GraphicsContext> graphics_context;
         WindowSpecification spec;
 
         struct WindowData {

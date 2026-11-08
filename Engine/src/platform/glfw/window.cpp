@@ -1,20 +1,16 @@
-#include "weave/platform/glfw/window.h"
-
-#include "weave/PCH.h"
-#include "weave/platform/glfw/window.h"
-#include "weave/core/key_codes.h"
-#include "weave/core/log.h"
-#include "weave/core/events/window_resize_event.h"
-#include "weave/core/events/window_close_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
-#include "weave/core/events/mouse_move_event.h"
-
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
+#include "weave/core/events/mouse_move_event.h"
+#include "weave/core/events/window_close_event.h"
+#include "weave/core/events/window_resize_event.h"
+#include "weave/core/key_codes.h"
+#include "weave/core/log.h"
+#include "weave/platform/glfw/window.h"
 
+#define GLFW_INCLUDE_NONE
+#include "GLFW/glfw3.h"
 
 namespace Weave::GLFW {
     static bool glfw_initialized = false;
@@ -139,8 +135,6 @@ namespace Weave::GLFW {
         key_lookup_table[GLFW_KEY_RIGHT_ALT] = Weave::KeyCode::RightAlt;
         key_lookup_table[GLFW_KEY_RIGHT_SUPER] = Weave::KeyCode::RightSuper;
         key_lookup_table[GLFW_KEY_MENU] = Weave::KeyCode::Menu;
-
-        key_lookup_table_initialized = true;
     }
 
     static void init_mouse_button_lookup_table() {
@@ -162,20 +156,13 @@ namespace Weave::GLFW {
 
     Window::Window(const WindowSpecification& spec) {
         this->window = nullptr;
+        this->graphics_context = nullptr;
         this->spec = spec;
         this->window_data = {};
     }
 
     Window::~Window() {
         this->shutdown();
-    }
-
-    void Window::process_events() {
-        glfwPollEvents();
-    }
-
-    void Window::swap_buffers() {
-        glfwSwapBuffers(this->window);
     }
 
     void Window::init() {
@@ -190,7 +177,7 @@ namespace Weave::GLFW {
 
             int success = glfwInit();
             if (success != GLFW_TRUE) {
-                WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to initialize");
+                WEAVE_LOG_CORE_CRITICAL_TAG("GLFW", "Failed to initialize");
                 glfwTerminate();
                 return;
             }
@@ -212,7 +199,9 @@ namespace Weave::GLFW {
         // For example, if using Vulkan, you would set the GLFW_CLIENT_API hint to GLFW_NO_API:
         // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+        // glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+        glfwWindowHint(GLFW_DECORATED, this->spec.decorated ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, this->spec.resizable ? GLFW_TRUE : GLFW_FALSE);
 
         if (this->spec.fullscreen) {
             GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
@@ -250,7 +239,8 @@ namespace Weave::GLFW {
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
 #endif
 
-        glfwMakeContextCurrent(this->window);
+        this->graphics_context = GraphicsContext::create(this);
+        this->graphics_context->init();
 
         glfwSetWindowUserPointer(this->window, &this->window_data);
 
@@ -358,6 +348,29 @@ namespace Weave::GLFW {
                     break;
             }
         });
+    }
+
+    void Window::process_events() {
+        glfwPollEvents();
+    }
+
+    void Window::swap_buffers() {
+        glfwSwapBuffers(this->window);
+    }
+
+    void Window::maximize() const {
+        glfwMaximizeWindow(this->window);
+    }
+
+    void Window::center() const {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        const uint32_t x = mode->width / 2 - this->window_data.width / 2;
+        const uint32_t y = mode->height / 2 - this->window_data.height / 2;
+        glfwSetWindowPos(this->window, static_cast<int>(x), static_cast<int>(y));
+    }
+
+    void Window::set_resizable(const bool resizable) const {
+        glfwSetWindowAttrib(this->window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
     }
 
     void Window::shutdown() const {
