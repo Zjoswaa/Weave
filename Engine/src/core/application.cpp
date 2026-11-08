@@ -1,9 +1,40 @@
 #include "weave/core/application.h"
 
+#include "weave/core/log.h"
+
 namespace Weave {
-    Application::Application() = default;
+    Application::Application() {
+        WEAVE_LOG_CORE_INFO_TAG("Application", "Application::Application()");
 
-    Application::~Application() = default;
+        WindowSpecification window_spec;
+        this->window = Window::create(window_spec);
+        this->window->init();
+        this->window->set_event_callback([this](Weave::Event& event) {
+            this->on_event(event);
+        });
+    };
 
-    void Application::run() {}
+    Application::~Application() {
+        WEAVE_LOG_CORE_INFO_TAG("Application", "Application::~Application()");
+    }
+
+    void Application::run() {
+        WEAVE_LOG_CORE_INFO_TAG("Application", "Application::run()");
+
+        this->running = true;
+
+        while(this->running) {
+            this->window->process_events();
+            this->window->swap_buffers();
+        }
+    }
+
+    void Application::on_event(Weave::Event &event) {
+        WEAVE_LOG_CORE_INFO_TAG("Event", "{}", event.to_string());
+
+        if (event.get_type() == EventType::WindowClose) {
+            WEAVE_LOG_CORE_INFO_TAG("Application", "Exiting application.");
+            this->running = false;
+        }
+    }
 }

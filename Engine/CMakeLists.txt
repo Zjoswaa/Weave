@@ -17,6 +17,8 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/deps/glad/include/
 )
 
+target_link_libraries(Engine PRIVATE glfw)
+
 target_precompile_headers(
         ${PROJECT_NAME}
         PRIVATE

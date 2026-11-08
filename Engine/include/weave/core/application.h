@@ -2,6 +2,8 @@
 #define WEAVE_APPLICATION_H
 
 #include "weave/PCH.h"
+#include "weave/core/events/event.h"
+#include "weave/core/window.h"
 
 namespace Weave {
     class Application {
@@ -10,6 +12,12 @@ namespace Weave {
         virtual ~Application();
 
         virtual void run();
+        virtual void on_event(Weave::Event& event);
+
+    private:
+        bool running = false;
+
+        std::unique_ptr<Weave::Window> window;
     };
 
     // Implemented by client
