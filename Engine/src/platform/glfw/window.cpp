@@ -241,6 +241,15 @@ namespace Weave::GLFW {
             return;
         }
 
+#ifdef WEAVE_PLATFORM_WINDOWS
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+        HWND hwnd = glfwGetWin32Window(this->window);
+        BOOL use_dark_mode = TRUE;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+#endif
+
         glfwMakeContextCurrent(this->window);
 
         glfwSetWindowUserPointer(this->window, &this->window_data);

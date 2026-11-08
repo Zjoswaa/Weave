@@ -4,6 +4,11 @@
 #include "weave/core/window.h"
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
+#ifdef WEAVE_PLATFORM_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <dwmapi.h>
+#endif
 
 namespace Weave::GLFW {
     class Window : public Weave::Window {
