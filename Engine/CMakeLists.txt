@@ -8,6 +8,8 @@ set_source_files_properties(${VENDOR_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS
 
 add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${VENDOR_SOURCES})
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC
