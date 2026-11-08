@@ -46,7 +46,7 @@ public:
 
 std::unique_ptr<Weave::Application> Weave::create_application(int argc, char** argv) {
     ApplicationSpecification spec;
-    spec.window_resizable = false;
+    spec.window_resizable = true;
 
     return std::make_unique<Sandbox>(spec);
 }

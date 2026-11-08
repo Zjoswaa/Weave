@@ -29,7 +29,7 @@ namespace Weave::GLFW {
         void center() const override;
         void set_resizable(bool resizable) const override;
 
-        void set_event_callback(const std::function<void(const Weave::Event&)>& callback) override {
+        void set_event_callback(const std::function<void(Weave::Event&)>& callback) override {
             this->window_data.event_callback = callback;
         }
 

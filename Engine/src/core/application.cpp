@@ -1,4 +1,6 @@
 #include "weave/core/application.h"
+#include "weave/core/events/window_close_event.h"
+#include "weave/core/events/window_resize_event.h"
 #include "weave/core/log.h"
 
 #include <glad/glad.h>
@@ -15,7 +17,7 @@ namespace Weave {
         window_spec.resizable = spec.window_resizable;
 
         this->window = Window::create(window_spec);
-        this->window->set_event_callback([this](const Weave::Event& event) {
+        this->window->set_event_callback([this](Weave::Event& event) {
             this->on_event(event);
         });
         this->window->init();
@@ -108,12 +110,19 @@ namespace Weave {
         }
     }
 
-    void Application::on_event(const Weave::Event &event) {
+    void Application::on_event(Weave::Event &event) {
         WEAVE_LOG_CORE_INFO_TAG("Event", "{}", event.to_string());
 
-        if (event.get_type() == EventType::WindowClose) {
+        EventDispatcher dispatcher(event);
+        dispatcher.dispatch<WindowResizeEvent>([](const WindowResizeEvent &e) {
+            glViewport(0, 0, e.get_width(), e.get_height());
+            return false;
+        });
+
+        dispatcher.dispatch<WindowCloseEvent>([this](const WindowCloseEvent &) {
             WEAVE_LOG_CORE_INFO_TAG("Application", "Exiting application.");
             this->running = false;
-        }
+            return true;
+        });
     }
 }

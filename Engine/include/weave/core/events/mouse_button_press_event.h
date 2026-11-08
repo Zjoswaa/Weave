@@ -17,6 +17,10 @@ namespace Weave {
             return EventType::MouseButtonPress;
         }
 
+        static EventType get_static_type() {
+            return EventType::MouseButtonPress;
+        }
+
         [[nodiscard]] EventCategory get_categories() const override {
             return EventCategory::Input | EventCategory::Mouse;
         }

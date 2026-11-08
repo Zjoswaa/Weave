@@ -46,6 +46,27 @@ namespace Weave {
 
         bool handled = false;
     };
+
+    class EventDispatcher {
+    public:
+        explicit EventDispatcher(Event &event) : event(event) {}
+
+        template <typename T, typename F>
+        bool dispatch(const F &handler) {
+            if (event.get_type() == T::get_static_type()) {
+                event.handled |= handler(static_cast<T &>(event));
+                return true;
+            }
+            return false;
+        }
+
+    private:
+        Event &event;
+    };
+
+    inline std::ostream& operator<<(std::ostream& os, const Event& e) {
+        return os << e.to_string();
+    }
 }
 
 #endif

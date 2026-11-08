@@ -9,6 +9,10 @@ namespace Weave {
         WindowCloseEvent() = default;
 
         [[nodiscard]] EventType get_type() const override {
+            return get_static_type();
+        }
+
+        static EventType get_static_type() {
             return EventType::WindowClose;
         }
 

@@ -22,7 +22,7 @@ namespace Weave {
         virtual ~Application();
 
         virtual void run();
-        virtual void on_event(const Weave::Event& event);
+        virtual void on_event(Weave::Event& event);
 
     private:
         bool running = false;
