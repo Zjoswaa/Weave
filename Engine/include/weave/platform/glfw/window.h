@@ -18,12 +18,14 @@ namespace Weave::GLFW {
         Window(const WindowSpecification& spec);
         ~Window() override;
 
-        void init() override;
+        bool init() override;
         void process_events() override;
         void swap_buffers() override;
 
         [[nodiscard]] uint32_t get_width() const override { return this->window_data.width; }
         [[nodiscard]] uint32_t get_height() const override { return this->window_data.height; }
+        [[nodiscard]] uint32_t get_framebuffer_width() const override { return this->window_data.framebuffer_width; }
+        [[nodiscard]] uint32_t get_framebuffer_height() const override { return this->window_data.framebuffer_height; }
 
         void maximize() const override;
         void center() const override;
@@ -38,7 +40,7 @@ namespace Weave::GLFW {
          *
          * @return A pointer to the owned GLFWwindow.
          */
-        inline void* get_native_window() const override {
+        [[nodiscard]] inline void* get_native_window() const override {
             return this->window;
         }
 
@@ -53,10 +55,12 @@ namespace Weave::GLFW {
         struct WindowData {
             std::string title;
             uint32_t width, height;
+            uint32_t framebuffer_width, framebuffer_height;
             std::function<void(Weave::Event&)> event_callback;
             uint32_t key_repeat_counts[GLFW_KEY_LAST + 1] = {0};
             double last_mouse_x = 0;
             double last_mouse_y = 0;
+            bool mouse_pos_valid = false;
         };
 
         WindowData window_data;

@@ -16,14 +16,17 @@ namespace Weave {
 
     class Window {
     public:
+        Window() = default;
         virtual ~Window() = default;
 
-        virtual void init() = 0;
+        virtual bool init() = 0;
         virtual void process_events() = 0;
         virtual void swap_buffers() = 0;
 
         [[nodiscard]] virtual uint32_t get_width() const = 0;
         [[nodiscard]] virtual uint32_t get_height() const = 0;
+        [[nodiscard]] virtual uint32_t get_framebuffer_width() const = 0;
+        [[nodiscard]] virtual uint32_t get_framebuffer_height() const = 0;
 
         virtual void maximize() const = 0;
         virtual void center() const = 0;
@@ -31,9 +34,15 @@ namespace Weave {
 
         virtual void set_event_callback(const std::function<void(Weave::Event&)>& callback) = 0;
 
-        inline virtual void* get_native_window() const = 0;
+        [[nodiscard]] virtual void* get_native_window() const = 0;
 
         static std::unique_ptr<Window> create(const WindowSpecification& spec = WindowSpecification());
+
+        // Remove copy and move constructors
+        Window(const Window&) = delete;
+        Window& operator=(const Window&) = delete;
+        Window(Window&&) = delete;
+        Window& operator=(Window&&) = delete;
     };
 }
 

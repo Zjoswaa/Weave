@@ -1,3 +1,4 @@
+#include "weave/core/events/framebuffer_resize_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
 #include "weave/core/events/mouse_button_press_event.h"
@@ -25,10 +26,6 @@ namespace Weave::GLFW {
     }
 
     static void init_key_lookup_table() {
-        if (key_lookup_table_initialized) {
-            return;
-        }
-
         key_lookup_table.fill(Weave::KeyCode::Unknown);
 
         key_lookup_table[GLFW_KEY_A] = Weave::KeyCode::A;
@@ -138,10 +135,6 @@ namespace Weave::GLFW {
     }
 
     static void init_mouse_button_lookup_table() {
-        if (mouse_button_lookup_table_initialized) {
-            return;
-        }
-
         mouse_button_lookup_table.fill(Weave::MouseButton::Unknown);
 
         mouse_button_lookup_table[GLFW_MOUSE_BUTTON_LEFT] = Weave::MouseButton::Left;
@@ -165,7 +158,7 @@ namespace Weave::GLFW {
         this->shutdown();
     }
 
-    void Window::init() {
+    bool Window::init() {
         this->window_data.title = this->spec.title;
         this->window_data.width = this->spec.width;
         this->window_data.height = this->spec.height;
@@ -179,7 +172,7 @@ namespace Weave::GLFW {
             if (success != GLFW_TRUE) {
                 WEAVE_LOG_CORE_CRITICAL_TAG("GLFW", "Failed to initialize");
                 glfwTerminate();
-                return;
+                return false;
             }
 
             glfw_initialized = true;
@@ -207,12 +200,12 @@ namespace Weave::GLFW {
             GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
             if (!primary_monitor) {
                 WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to get primary monitor for fullscreen mode");
-                return;
+                return false;
             }
             const GLFWvidmode* mode = glfwGetVideoMode(primary_monitor);
             if (!mode) {
                 WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to get video mode for primary monitor");
-                return;
+                return false;
             }
 
             glfwWindowHint(GLFW_RED_BITS, mode->redBits);
@@ -227,8 +220,23 @@ namespace Weave::GLFW {
 
         if (!this->window) {
             WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to create window");
-            return;
+            return false;
         }
+
+        {
+            int window_width, window_height;
+            glfwGetWindowSize(this->window, &window_width, &window_height);
+            this->window_data.width = window_width;
+            this->window_data.height = window_height;
+
+            int framebuffer_width, framebuffer_height;
+            glfwGetFramebufferSize(this->window, &framebuffer_width , &framebuffer_height);
+            this->window_data.framebuffer_width = framebuffer_width;
+            this->window_data.framebuffer_height = framebuffer_height;
+        }
+
+        // WEAVE_LOG_DEBUG("{} {}", this->window_data.width, this->window_data.height);
+        // WEAVE_LOG_DEBUG("{} {}", this->window_data.framebuffer_width, this->window_data.framebuffer_height);
 
 #ifdef WEAVE_PLATFORM_WINDOWS
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
@@ -251,13 +259,22 @@ namespace Weave::GLFW {
         }
 
         // -- GLFW Callbacks --
+        glfwSetFramebufferSizeCallback(this->window, [](GLFWwindow* window, int width, int height) {
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+
+            data.framebuffer_width = width;
+            data.framebuffer_height = height;
+            Weave::FramebufferResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+            data.event_callback(event);
+        });
+
         glfwSetWindowSizeCallback(this->window, [](GLFWwindow* window, int width, int height) {
             WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-            Weave::WindowResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-            data.event_callback(event);
             data.width = width;
             data.height = height;
+            // Weave::WindowResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+            // data.event_callback(event);
         });
 
         glfwSetWindowCloseCallback(this->window, [](GLFWwindow* window) {
@@ -312,10 +329,25 @@ namespace Weave::GLFW {
         glfwSetCursorPosCallback(this->window, [](GLFWwindow* window, double xpos, double ypos) {
             WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-            Weave::MouseMoveEvent event(xpos, ypos, xpos - data.last_mouse_x, ypos - data.last_mouse_y);
+            double dx = 0.0, dy = 0.0;
+            if (data.mouse_pos_valid) {
+                dx = xpos - data.last_mouse_x;
+                dy = ypos - data.last_mouse_y;
+            }
             data.last_mouse_x = xpos;
             data.last_mouse_y = ypos;
+            data.mouse_pos_valid = true;
+
+            Weave::MouseMoveEvent event(xpos, ypos, dx, dy);
             data.event_callback(event);
+        });
+
+        glfwSetCursorEnterCallback(this->window, [](GLFWwindow* window, int entered) {
+            static_cast<WindowData*>(glfwGetWindowUserPointer(window))->mouse_pos_valid = false;
+        });
+
+        glfwSetWindowFocusCallback(this->window, [](GLFWwindow* window, int focused) {
+            static_cast<WindowData*>(glfwGetWindowUserPointer(window))->mouse_pos_valid = false;
         });
 
         glfwSetMouseButtonCallback(this->window, [](GLFWwindow* window, int button, int action, int mods) {
@@ -348,6 +380,8 @@ namespace Weave::GLFW {
                     break;
             }
         });
+
+        return true;
     }
 
     void Window::process_events() {

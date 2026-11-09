@@ -10,6 +10,7 @@ namespace Weave {
         None = 0,
         WindowClose,
         WindowResize,
+        FramebufferResize,
         KeyPress,
         KeyRelease,
         MouseButtonPress,

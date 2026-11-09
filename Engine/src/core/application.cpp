@@ -1,6 +1,6 @@
 #include "weave/core/application.h"
+#include "weave/core/events/framebuffer_resize_event.h"
 #include "weave/core/events/window_close_event.h"
-#include "weave/core/events/window_resize_event.h"
 #include "weave/core/log.h"
 
 #include <glad/glad.h>
@@ -20,7 +20,9 @@ namespace Weave {
         this->window->set_event_callback([this](Weave::Event& event) {
             this->on_event(event);
         });
-        this->window->init();
+        if (!this->window->init()) {
+            throw std::runtime_error("Failed to initialize window.");
+        }
 
         if (spec.window_maximized && !spec.window_fullscreen) {
             this->window->maximize();
@@ -111,10 +113,11 @@ namespace Weave {
     }
 
     void Application::on_event(Weave::Event &event) {
-        WEAVE_LOG_CORE_INFO_TAG("Event", "{}", event.to_string());
+        WEAVE_LOG_CORE_TRACE_TAG("Event", "{}", event.to_string());
 
         EventDispatcher dispatcher(event);
-        dispatcher.dispatch<WindowResizeEvent>([](const WindowResizeEvent &e) {
+        dispatcher.dispatch<FramebufferResizeEvent>([](const FramebufferResizeEvent &e) {
+            WEAVE_LOG_CORE_INFO_TAG("Event", "{}", e.to_string());
             glViewport(0, 0, e.get_width(), e.get_height());
             return false;
         });
