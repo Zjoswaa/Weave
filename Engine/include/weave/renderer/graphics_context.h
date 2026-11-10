@@ -14,7 +14,7 @@ namespace Weave {
     public:
         virtual ~GraphicsContext() = default;
 
-        virtual void init() = 0;
+        virtual bool init() = 0;
 
         static std::unique_ptr<GraphicsContext> create(Weave::Window* window);
     };

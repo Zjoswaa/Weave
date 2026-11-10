@@ -15,7 +15,7 @@
 namespace Weave::GLFW {
     class Window : public Weave::Window {
     public:
-        Window(const WindowSpecification& spec);
+        explicit Window(const WindowSpecification& spec);
         ~Window() override;
 
         bool init() override;

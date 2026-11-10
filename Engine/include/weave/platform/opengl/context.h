@@ -10,7 +10,7 @@ namespace Weave::OpenGL {
         Context(const Weave::Window* window);
         virtual ~Context();
 
-        void init() override;
+        bool init() override;
 
     private:
         void shutdown();

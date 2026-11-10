@@ -21,7 +21,7 @@ namespace Weave {
             this->on_event(event);
         });
         if (!this->window->init()) {
-            throw std::runtime_error("Failed to initialize window.");
+            throw std::runtime_error("Failed to initialize window");
         }
 
         if (spec.window_maximized && !spec.window_fullscreen) {

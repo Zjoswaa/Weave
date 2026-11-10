@@ -15,7 +15,7 @@ namespace Weave::OpenGL {
         this->shutdown();
     }
 
-    void Context::init() {
+    bool Context::init() {
         WEAVE_LOG_CORE_INFO("Creating OpenGL context");
 
         glfwMakeContextCurrent(static_cast<GLFWwindow*>(this->window->get_native_window()));
@@ -23,13 +23,15 @@ namespace Weave::OpenGL {
         int success = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         if (!success) {
             WEAVE_LOG_CORE_CRITICAL_TAG("GLAD", "Failed to initialize");
-            return;
+            return false;
         }
 
         WEAVE_LOG_CORE_INFO("OpenGL Info:");
         WEAVE_LOG_CORE_INFO("  Vendor:   {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
         WEAVE_LOG_CORE_INFO("  Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
         WEAVE_LOG_CORE_INFO("  Version:  {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+
+        return true;
     }
 
     void Context::shutdown() {

@@ -248,7 +248,9 @@ namespace Weave::GLFW {
 #endif
 
         this->graphics_context = GraphicsContext::create(this);
-        this->graphics_context->init();
+        if (!this->graphics_context->init()) {
+            throw std::runtime_error("Failed to initialize graphics context");
+        }
 
         glfwSetWindowUserPointer(this->window, &this->window_data);
 
