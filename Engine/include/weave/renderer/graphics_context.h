@@ -16,7 +16,7 @@ namespace Weave {
 
         virtual bool init() = 0;
 
-        static std::unique_ptr<GraphicsContext> create(Weave::Window* window);
+        static std::unique_ptr<GraphicsContext> create(const Weave::Window& window);
     };
 }
 

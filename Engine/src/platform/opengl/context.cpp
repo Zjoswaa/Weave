@@ -7,9 +7,7 @@
 #include "glad/glad.h"
 
 namespace Weave::OpenGL {
-    Context::Context(const Weave::Window* window) {
-        this->window = window;
-    }
+    Context::Context(const Weave::Window& window) : window(window) { }
 
     Context::~Context() {
         this->shutdown();
@@ -18,7 +16,7 @@ namespace Weave::OpenGL {
     bool Context::init() {
         WEAVE_LOG_CORE_INFO("Creating OpenGL context");
 
-        glfwMakeContextCurrent(static_cast<GLFWwindow*>(this->window->get_native_window()));
+        glfwMakeContextCurrent(static_cast<GLFWwindow*>(this->window.get_native_window()));
 
         int success = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         if (!success) {
@@ -36,5 +34,6 @@ namespace Weave::OpenGL {
 
     void Context::shutdown() {
         WEAVE_LOG_CORE_INFO("Destroying OpenGL context");
+        glfwMakeContextCurrent(nullptr);
     }
 }

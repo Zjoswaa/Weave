@@ -45,7 +45,7 @@ namespace Weave::GLFW {
         }
 
     private:
-        void shutdown() const;
+        void shutdown();
 
     private:
         GLFWwindow* window;

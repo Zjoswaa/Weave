@@ -247,7 +247,7 @@ namespace Weave::GLFW {
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
 #endif
 
-        this->graphics_context = GraphicsContext::create(this);
+        this->graphics_context = GraphicsContext::create(*this);
         if (!this->graphics_context->init()) {
             throw std::runtime_error("Failed to initialize graphics context");
         }
@@ -409,9 +409,14 @@ namespace Weave::GLFW {
         glfwSetWindowAttrib(this->window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
     }
 
-    void Window::shutdown() const {
+    void Window::shutdown() {
         WEAVE_LOG_CORE_INFO("Destroying window '{}'", this->spec.title);
+
+        this->graphics_context.reset();
+
         glfwDestroyWindow(this->window);
+        this->window = nullptr;
+
         if (glfw_initialized) {
             glfwTerminate();
             glfw_initialized = false;

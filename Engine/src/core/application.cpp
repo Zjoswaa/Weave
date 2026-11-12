@@ -118,7 +118,7 @@ namespace Weave {
         EventDispatcher dispatcher(event);
         dispatcher.dispatch<FramebufferResizeEvent>([](const FramebufferResizeEvent &e) {
             WEAVE_LOG_CORE_INFO_TAG("Event", "{}", e.to_string());
-            glViewport(0, 0, e.get_width(), e.get_height());
+            glViewport(0, 0, static_cast<GLint>(e.get_width()), static_cast<GLint>(e.get_height()));
             return false;
         });
 
