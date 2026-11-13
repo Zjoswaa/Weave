@@ -75,7 +75,6 @@ if (WEAVE_RENDERING_OPENGL)
     add_compile_definitions(WEAVE_HAS_OPENGL)
 endif()
 
-add_subdirectory(deps/spdlog)
-
+add_subdirectory(deps)
 add_subdirectory(Engine)
 add_subdirectory(Sandbox)

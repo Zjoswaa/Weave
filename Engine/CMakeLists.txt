@@ -26,10 +26,8 @@ endif()
 if (WEAVE_RENDERING_OPENGL)
     file(GLOB_RECURSE OPENGL_SOURCES CONFIGURE_DEPENDS src/platform/opengl/*.cpp)
     file(GLOB_RECURSE OPENGL_HEADERS CONFIGURE_DEPENDS include/weave/platform/opengl/*.h)
-    file(GLOB_RECURSE GLAD_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../deps/glad/src/*.c)
-    set_source_files_properties(${GLAD_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
-    target_sources(${PROJECT_NAME} PRIVATE ${OPENGL_SOURCES} ${OPENGL_HEADERS} ${GLAD_SOURCES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../deps/glad/include/)
+    target_sources(${PROJECT_NAME} PRIVATE ${OPENGL_SOURCES} ${OPENGL_HEADERS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE glad)
 endif()
 
 if(WIN32)
@@ -42,7 +40,11 @@ target_include_directories(
         ${PROJECT_NAME}
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        ${CMAKE_CURRENT_SOURCE_DIR}/../deps/spdlog/include/
+)
+
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC spdlog::spdlog
+        PRIVATE imgui
 )
 
 target_precompile_headers(

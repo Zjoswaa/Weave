@@ -1,7 +1,9 @@
 #ifndef WEAVE_LOG_H
 #define WEAVE_LOG_H
 
-#include <spdlog/spdlog.h>
+#include "weave/PCH.h"
+
+#include "spdlog/spdlog.h"
 #include "spdlog/pattern_formatter.h"
 
 namespace Weave {
