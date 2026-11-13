@@ -1,45 +1,49 @@
 project(Engine CXX C)
 
-file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp)
-file(GLOB_RECURSE PROJECT_HEADERS include/*.h)
+file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS
+        src/core/*.cpp
+        src/platform/platform.cpp
+        src/renderer/*.cpp
+)
+file(GLOB_RECURSE CORE_HEADERS CONFIGURE_DEPENDS
+        include/weave/entry_point.h
+        include/weave.h
+        include/weave/core/*.h
+        include/weave/platform/platform.h
+        include/weave/renderer/*.h
+)
 
-if (WEAVE_RENDERING_OPENGL)
-    file(GLOB_RECURSE GLAD_SOURCES ${CMAKE_SOURCE_DIR}/deps/glad/*.c)
-    set_source_files_properties(${GLAD_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+add_library(${PROJECT_NAME} STATIC ${CORE_SOURCES} ${CORE_HEADERS})
+
+if (WEAVE_WINDOWING_BACKEND STREQUAL "GLFW")
+    file(GLOB_RECURSE GLFW_SOURCES CONFIGURE_DEPENDS include/weave/platform/glfw/*.h)
+    file(GLOB_RECURSE GLFW_HEADERS CONFIGURE_DEPENDS src/platform/glfw/*.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE ${GLFW_SOURCES} ${GLFW_HEADERS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../deps/glfw/include/)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 endif()
 
-add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${GLAD_SOURCES})
+if (WEAVE_RENDERING_OPENGL)
+    file(GLOB_RECURSE OPENGL_SOURCES CONFIGURE_DEPENDS src/platform/opengl/*.cpp)
+    file(GLOB_RECURSE OPENGL_HEADERS CONFIGURE_DEPENDS include/weave/platform/opengl/*.h)
+    file(GLOB_RECURSE GLAD_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../deps/glad/src/*.c)
+    set_source_files_properties(${GLAD_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+    target_sources(${PROJECT_NAME} PRIVATE ${OPENGL_SOURCES} ${OPENGL_HEADERS} ${GLAD_SOURCES})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../deps/glad/include/)
+endif()
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi)
+endif()
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../assets")
 
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        ${CMAKE_SOURCE_DIR}/deps/spdlog/include/
+        ${CMAKE_CURRENT_SOURCE_DIR}/../deps/spdlog/include/
 )
-
-if (WEAVE_WINDOWING_BACKEND STREQUAL "GLFW")
-    target_include_directories(
-            ${PROJECT_NAME}
-            PUBLIC
-            ${CMAKE_SOURCE_DIR}/deps/glfw/include/
-    )
-
-    target_link_libraries(Engine PRIVATE glfw)
-endif()
-
-if (WEAVE_RENDERING_OPENGL)
-    target_include_directories(
-            ${PROJECT_NAME}
-            PUBLIC
-            ${CMAKE_SOURCE_DIR}/deps/glad/include/
-    )
-endif()
-
-if(WIN32)
-    target_link_libraries(Engine PRIVATE dwmapi)
-endif()
 
 target_precompile_headers(
         ${PROJECT_NAME}
