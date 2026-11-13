@@ -14,4 +14,4 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
 )
 
-target_link_libraries(${PROJECT_NAME} Engine)
+target_link_libraries(${PROJECT_NAME} Engine glad)

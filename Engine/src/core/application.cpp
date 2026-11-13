@@ -6,7 +6,11 @@
 #include <glad/glad.h>
 
 namespace Weave {
+    Application* Application::instance = nullptr;
+
     Application::Application(const ApplicationSpecification& spec) {
+        instance = this;
+
         WEAVE_LOG_CORE_INFO_TAG("Application", "Application::Application()");
 
         this->spec = spec;
@@ -35,68 +39,17 @@ namespace Weave {
             this->window->center();
         }
 
-        // == Temporary OpenGL setup ==
-
-        float vertices[] = {
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-             0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
-        };
-
-        // 3. Create Vertex Array Object & Vertex Buffer Object
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-
-        const char* vertexShaderSource = R"(
-            #version 330 core
-            layout (location = 0) in vec3 aPos;
-            layout (location = 1) in vec3 color;
-            out vec3 vertexColor;
-            void main() {
-                gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-                vertexColor = color;
-            }
-        )";
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-        glCompileShader(vertexShader);
-
-        const char* fragmentShaderSource = R"(
-            #version 330 core
-            out vec4 FragColor;
-            in vec3 vertexColor;
-            void main() {
-                FragColor = vec4(vertexColor, 1.0f);
-            }
-        )";
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
-
-        shader_program = glCreateProgram();
-        glAttachShader(shader_program, vertexShader);
-        glAttachShader(shader_program, fragmentShader);
-        glLinkProgram(shader_program);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        this->imgui_layer = ImGuiLayer::create();
+        this->push_overlay(this->imgui_layer);
     }
 
     Application::~Application() {
         WEAVE_LOG_CORE_INFO_TAG("Application", "Application::~Application()");
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteProgram(shader_program);
+
+        for (Layer* layer : layer_stack) {
+            layer->on_detach();
+            delete layer;
+        }
     }
 
     void Application::run() {
@@ -105,12 +58,18 @@ namespace Weave {
         this->running = true;
 
         while(this->running) {
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            glUseProgram(shader_program);
-            glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            for (Layer* layer : this->layer_stack) {
+                layer->on_update();
+            }
+
+            this->imgui_layer->begin();
+            for (Layer* layer : this->layer_stack) {
+                layer->on_imgui_render();
+            }
+            this->imgui_layer->end();
 
             this->window->process_events();
             this->window->swap_buffers();
@@ -132,5 +91,32 @@ namespace Weave {
             this->running = false;
             return true;
         });
+
+        for (const auto & it : std::views::reverse(this->layer_stack)) {
+            it->on_event(event);
+            if (event.handled) {
+                break;
+            }
+        }
+    }
+
+    void Application::push_layer(Layer* layer) {
+        this->layer_stack.push(layer);
+        layer->on_attach();
+    }
+
+    void Application::push_overlay(Layer* layer) {
+        this->layer_stack.push_overlay(layer);
+        layer->on_attach();
+    }
+
+    void Application::pop_layer(Layer* layer) {
+        this->layer_stack.pop(layer);
+        layer->on_detach();
+    }
+
+    void Application::pop_overlay(Layer* layer) {
+        this->layer_stack.pop_overlay(layer);
+        layer->on_detach();
     }
 }

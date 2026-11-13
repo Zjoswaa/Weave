@@ -2,6 +2,7 @@ project(Engine CXX C)
 
 file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS
         src/core/*.cpp
+        src/imgui/*.cpp
         src/platform/platform.cpp
         src/renderer/*.cpp
 )
@@ -9,6 +10,7 @@ file(GLOB_RECURSE CORE_HEADERS CONFIGURE_DEPENDS
         include/weave/entry_point.h
         include/weave.h
         include/weave/core/*.h
+        include/weave/imgui/*.h
         include/weave/platform/platform.h
         include/weave/renderer/*.h
 )
@@ -43,8 +45,7 @@ target_include_directories(
 )
 
 target_link_libraries(${PROJECT_NAME}
-        PUBLIC spdlog::spdlog
-        PRIVATE imgui
+        PUBLIC spdlog::spdlog imgui
 )
 
 target_precompile_headers(
