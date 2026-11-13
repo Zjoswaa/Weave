@@ -1,3 +1,5 @@
+#ifdef WEAVE_HAS_OPENGL
+
 #include "weave/core/log.h"
 #include "weave/core/window.h"
 #include "weave/platform/opengl/context.h"
@@ -16,6 +18,7 @@ namespace Weave::OpenGL {
     bool Context::init() {
         WEAVE_LOG_CORE_INFO("Creating OpenGL context");
 
+        // TODO: Move this and GraphicsContext to a renderer class
         glfwMakeContextCurrent(static_cast<GLFWwindow*>(this->window.get_native_window()));
 
         int success = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
@@ -37,3 +40,5 @@ namespace Weave::OpenGL {
         glfwMakeContextCurrent(nullptr);
     }
 }
+
+#endif // WEAVE_HAS_OPENGL

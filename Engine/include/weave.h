@@ -11,8 +11,10 @@
 #include "weave/core/key_codes.h"
 #include "weave/core/log.h"
 #include "weave/core/version.h"
+#include "weave/core/window.h"
 
 #include "weave/core/events/event.h"
+#include "weave/core/events/framebuffer_resize_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
 #include "weave/core/events/mouse_button_press_event.h"

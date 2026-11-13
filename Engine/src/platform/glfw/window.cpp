@@ -1,3 +1,5 @@
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
+
 #include "weave/core/events/framebuffer_resize_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
@@ -14,7 +16,6 @@
 #include "GLFW/glfw3.h"
 
 namespace Weave::GLFW {
-    static bool glfw_initialized = false;
     static std::array<Weave::KeyCode, GLFW_KEY_LAST + 1> key_lookup_table;
     static bool key_lookup_table_initialized = false;
 
@@ -164,19 +165,6 @@ namespace Weave::GLFW {
         this->window_data.height = this->spec.height;
 
         WEAVE_LOG_CORE_INFO("Creating window '{}' ({}x{})", this->spec.title, this->spec.width, this->spec.height);
-
-        if (!glfw_initialized) {
-            glfwSetErrorCallback(glfw_error_callback);
-
-            int success = glfwInit();
-            if (success != GLFW_TRUE) {
-                WEAVE_LOG_CORE_CRITICAL_TAG("GLFW", "Failed to initialize");
-                glfwTerminate();
-                return false;
-            }
-
-            glfw_initialized = true;
-        }
 
         if (!key_lookup_table_initialized) {
             init_key_lookup_table();
@@ -416,10 +404,7 @@ namespace Weave::GLFW {
 
         glfwDestroyWindow(this->window);
         this->window = nullptr;
-
-        if (glfw_initialized) {
-            glfwTerminate();
-            glfw_initialized = false;
-        }
     }
 }
+
+#endif // WEAVE_WINDOWING_BACKEND_GLFW

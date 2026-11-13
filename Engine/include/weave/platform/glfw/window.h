@@ -1,5 +1,6 @@
 #ifndef WEAVE_GLFW_WINDOW_H
 #define WEAVE_GLFW_WINDOW_H
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
 
 #include "weave/core/window.h"
 #include "weave/renderer/graphics_context.h"
@@ -67,4 +68,5 @@ namespace Weave::GLFW {
     };
 }
 
-#endif
+#endif // WEAVE_WINDOWING_BACKEND_GLFW
+#endif // WEAVE_GLFW_WINDOW_H

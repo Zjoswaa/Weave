@@ -4,6 +4,7 @@
 #include "weave/PCH.h"
 #include "weave/core/events/event.h"
 #include "weave/core/window.h"
+#include "weave/platform/platform.h"
 
 namespace Weave {
     struct ApplicationSpecification {
@@ -26,8 +27,9 @@ namespace Weave {
 
     private:
         bool running = false;
-
         ApplicationSpecification spec;
+
+        std::unique_ptr<Weave::Platform> platform;
         std::unique_ptr<Weave::Window> window;
 
         // Temporary raw OpenGL handles

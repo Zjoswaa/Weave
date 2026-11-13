@@ -1,5 +1,6 @@
 #ifndef WEAVE_OPENGL_CONTEXT_H
 #define WEAVE_OPENGL_CONTEXT_H
+#ifdef WEAVE_HAS_OPENGL
 
 #include "weave/core/window.h"
 #include "weave/renderer/graphics_context.h"
@@ -20,4 +21,5 @@ namespace Weave::OpenGL {
     };
 }
 
-#endif
+#endif // WEAVE_HAS_OPENGL
+#endif // WEAVE_OPENGL_CONTEXT_H

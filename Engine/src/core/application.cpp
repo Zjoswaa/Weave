@@ -11,6 +11,11 @@ namespace Weave {
 
         this->spec = spec;
 
+        this->platform = Platform::create();
+        if (!this->platform->init()) {
+            throw std::runtime_error("Failed to initialize platform");
+        }
+
         WindowSpecification window_spec;
         window_spec.decorated = spec.window_decorated;
         window_spec.fullscreen = spec.window_fullscreen;
