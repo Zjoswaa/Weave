@@ -1,6 +1,6 @@
 #include "weave/PCH.h"
 #include "weave/imgui/imgui_layer.h"
-#include "weave/platform/opengl/imgui_layer.h"
+#include "weave/platform/opengl/opengl_imgui_layer.h"
 
 #include "imgui.h"
 

@@ -1,6 +1,6 @@
 #include "weave/PCH.h"
 #include "weave/core/application.h"
-#include "weave/platform/opengl/imgui_layer.h"
+#include "weave/platform/opengl/opengl_imgui_layer.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -33,21 +33,27 @@ namespace Weave::OpenGL {
         //     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         // }
 
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
         Application& app = Application::get();
         auto* window = static_cast<GLFWwindow*>(app.get_window().get_native_window());
         ImGui_ImplGlfw_InitForOpenGL(window, true);
+#endif
         ImGui_ImplOpenGL3_Init("#version 330 core");
     }
 
     void ImGuiLayer::on_detach() {
         ImGui_ImplOpenGL3_Shutdown();
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
         ImGui_ImplGlfw_Shutdown();
+#endif
         ImGui::DestroyContext();
     }
 
     void ImGuiLayer::begin() {
         ImGui_ImplOpenGL3_NewFrame();
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
         ImGui_ImplGlfw_NewFrame();
+#endif
         ImGui::NewFrame();
     }
 
@@ -57,10 +63,14 @@ namespace Weave::OpenGL {
 
         ImGuiIO& io = ImGui::GetIO();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
             GLFWwindow* backup_current_context = glfwGetCurrentContext();
+#endif
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
+#ifdef WEAVE_WINDOWING_BACKEND_GLFW
             glfwMakeContextCurrent(backup_current_context);
+#endif
         }
     }
 }

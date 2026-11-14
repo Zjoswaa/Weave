@@ -2,7 +2,7 @@
 
 #include "weave/core/log.h"
 #include "weave/core/window.h"
-#include "weave/platform/opengl/context.h"
+#include "weave/platform/opengl/opengl_context.h"
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
