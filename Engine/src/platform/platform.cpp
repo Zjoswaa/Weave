@@ -1,5 +1,5 @@
 #include "weave/PCH.h"
-#include "weave/platform/glfw/platform.h"
+#include "weave/platform/glfw/glfw_platform.h"
 #include "weave/platform/platform.h"
 
 namespace Weave {

@@ -1,7 +1,7 @@
 #ifdef WEAVE_WINDOWING_BACKEND_GLFW
 
 #include "weave/core/log.h"
-#include "weave/platform/glfw/platform.h"
+#include "weave/platform/glfw/glfw_platform.h"
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"

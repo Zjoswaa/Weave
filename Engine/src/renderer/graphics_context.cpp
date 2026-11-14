@@ -1,6 +1,6 @@
 #include "weave/PCH.h"
 #include "weave/core/window.h"
-#include "weave/platform/opengl/context.h"
+#include "weave/platform/opengl/opengl_context.h"
 #include "weave/renderer/graphics_context.h"
 
 namespace Weave {

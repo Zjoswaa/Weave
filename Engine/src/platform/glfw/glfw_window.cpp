@@ -10,7 +10,7 @@
 #include "weave/core/events/window_resize_event.h"
 #include "weave/core/key_codes.h"
 #include "weave/core/log.h"
-#include "weave/platform/glfw/window.h"
+#include "weave/platform/glfw/glfw_window.h"
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
