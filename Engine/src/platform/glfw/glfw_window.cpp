@@ -14,6 +14,11 @@
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
+#ifdef WEAVE_PLATFORM_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <dwmapi.h>
+#endif
 
 namespace Weave::GLFW {
     static std::array<Weave::KeyCode, GLFW_KEY_LAST + 1> key_lookup_table;
@@ -210,6 +215,15 @@ namespace Weave::GLFW {
             WEAVE_LOG_CORE_ERROR_TAG("GLFW", "Failed to create window");
             return false;
         }
+
+#ifdef WEAVE_PLATFORM_WINDOWS
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+        HWND hwnd = glfwGetWin32Window(this->window);
+        BOOL use_dark_mode = TRUE;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
+#endif
 
         {
             int window_width, window_height;
