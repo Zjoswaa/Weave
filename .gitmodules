@@ -8,3 +8,6 @@
 	path = deps/imgui
 	url = git@github.com:ocornut/imgui.git
 	branch = docking
+[submodule "deps/stb"]
+	path = deps/stb
+	url = git@github.com:nothings/stb.git
