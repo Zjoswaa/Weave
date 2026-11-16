@@ -285,15 +285,6 @@ namespace Weave::GLFW {
         // WEAVE_LOG_DEBUG("{} {}", this->window_data.width, this->window_data.height);
         // WEAVE_LOG_DEBUG("{} {}", this->window_data.framebuffer_width, this->window_data.framebuffer_height);
 
-#ifdef WEAVE_PLATFORM_WINDOWS
-#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-#endif
-        HWND hwnd = glfwGetWin32Window(this->window);
-        BOOL use_dark_mode = TRUE;
-        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &use_dark_mode, sizeof(use_dark_mode));
-#endif
-
         this->graphics_context = GraphicsContext::create(*this);
         if (!this->graphics_context->init()) {
             throw std::runtime_error("Failed to initialize graphics context");
