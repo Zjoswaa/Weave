@@ -37,6 +37,22 @@ namespace Weave {
             return ss.str();
         }
 
+        [[nodiscard]] inline double get_x() const {
+            return this->x;
+        }
+
+        [[nodiscard]] inline double get_y() const {
+            return this->y;
+        }
+
+        [[nodiscard]] inline double get_delta_x() const {
+            return this->delta_x;
+        }
+
+        [[nodiscard]] inline double get_delta_y() const {
+            return this->delta_y;
+        }
+
     private:
         double x;
         double y;

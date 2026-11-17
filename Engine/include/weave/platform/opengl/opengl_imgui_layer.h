@@ -14,6 +14,9 @@ namespace Weave::OpenGL {
 
         void begin() override;
         void end() override;
+
+    private:
+        float time = 0.f;
     };
 }
 

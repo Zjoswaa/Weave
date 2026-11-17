@@ -13,9 +13,11 @@ namespace Weave {
         FramebufferResize,
         KeyPress,
         KeyRelease,
+        KeyType,
         MouseButtonPress,
         MouseButtonRelease,
-        MouseMove
+        MouseMove,
+        MouseScroll
     };
 
     enum class EventCategory : uint32_t {

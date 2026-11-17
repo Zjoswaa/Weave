@@ -3,9 +3,11 @@
 #include "weave/core/events/framebuffer_resize_event.h"
 #include "weave/core/events/key_press_event.h"
 #include "weave/core/events/key_release_event.h"
+#include "weave/core/events/key_type_event.h"
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
 #include "weave/core/events/mouse_move_event.h"
+#include "weave/core/events/mouse_scroll_event.h"
 #include "weave/core/events/window_close_event.h"
 #include "weave/core/events/window_resize_event.h"
 #include "weave/core/key_codes.h"
@@ -366,6 +368,13 @@ namespace Weave::GLFW {
             }
         });
 
+        glfwSetCharCallback(this->window, [](GLFWwindow* window, unsigned int codepoint) {
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+
+            Weave::KeyTypeEvent event(codepoint);
+            data.event_callback(event);
+        });
+
         glfwSetCursorPosCallback(this->window, [](GLFWwindow* window, double xpos, double ypos) {
             WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
@@ -379,6 +388,13 @@ namespace Weave::GLFW {
             data.mouse_pos_valid = true;
 
             Weave::MouseMoveEvent event(xpos, ypos, dx, dy);
+            data.event_callback(event);
+        });
+
+        glfwSetScrollCallback(this->window, [](GLFWwindow* window, double xoffset, double yoffset) {
+            WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+
+            Weave::MouseScrollEvent event(xoffset, yoffset);
             data.event_callback(event);
         });
 

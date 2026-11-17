@@ -20,6 +20,7 @@
 #include "weave/core/events/mouse_button_press_event.h"
 #include "weave/core/events/mouse_button_release_event.h"
 #include "weave/core/events/mouse_move_event.h"
+#include "weave/core/events/mouse_scroll_event.h"
 #include "weave/core/events/window_close_event.h"
 #include "weave/core/events/window_resize_event.h"
 
