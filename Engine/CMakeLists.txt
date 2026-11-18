@@ -46,7 +46,7 @@ target_include_directories(
 )
 
 target_link_libraries(${PROJECT_NAME}
-        PUBLIC spdlog::spdlog imgui
+        PUBLIC spdlog::spdlog imgui glm
 )
 
 target_precompile_headers(
