@@ -61,6 +61,8 @@ namespace Weave {
             glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
+            this->window->process_events();
+
             for (Layer* layer : this->layer_stack) {
                 layer->on_update();
             }
@@ -71,7 +73,6 @@ namespace Weave {
             }
             this->imgui_layer->end();
 
-            this->window->process_events();
             this->window->swap_buffers();
         }
     }
