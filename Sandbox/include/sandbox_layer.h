@@ -17,6 +17,7 @@ public:
 private:
     unsigned int VAO = 0;
     unsigned int VBO = 0;
+    unsigned int IBO = 0;
     unsigned int shader_program = 0;
 };
 

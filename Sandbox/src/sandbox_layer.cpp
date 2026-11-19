@@ -7,16 +7,22 @@
 SandboxLayer::SandboxLayer() : Weave::Layer("SandboxLayer") { }
 
 void SandboxLayer::on_attach() {
-    float vertices[] = {
+    float vertices[6 * 3] = {
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
          0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
          0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
     };
 
+    uint32_t indices[3] {
+        0, 1, 2
+    };
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &IBO);
 
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -24,6 +30,9 @@ void SandboxLayer::on_attach() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     const char* vertex_shader_source = R"(
             #version 330 core
@@ -65,13 +74,14 @@ void SandboxLayer::on_attach() {
 void SandboxLayer::on_detach() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &IBO);
     glDeleteProgram(shader_program);
 }
 
 void SandboxLayer::on_update() {
     glUseProgram(shader_program);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 }
 
 void SandboxLayer::on_event(Weave::Event& event) {

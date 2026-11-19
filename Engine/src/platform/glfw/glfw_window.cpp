@@ -220,6 +220,8 @@ namespace Weave::GLFW {
             return false;
         }
 
+        glfwSetWindowUserPointer(this->window, &this->window_data);
+
 #ifdef WEAVE_PLATFORM_WINDOWS
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
@@ -291,8 +293,6 @@ namespace Weave::GLFW {
         if (!this->graphics_context->init()) {
             throw std::runtime_error("Failed to initialize graphics context");
         }
-
-        glfwSetWindowUserPointer(this->window, &this->window_data);
 
         if (glfwRawMouseMotionSupported()) {
             glfwSetInputMode(this->window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
