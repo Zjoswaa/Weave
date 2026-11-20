@@ -9,9 +9,9 @@ SandboxLayer::SandboxLayer() : Weave::Layer("SandboxLayer") { }
 
 void SandboxLayer::on_attach() {
     float vertices[6 * 3] = {
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+        -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.2f,
+         0.5f, -0.5f, 0.0f, 0.2f, 0.8f, 0.2f,
+         0.0f,  0.5f, 0.0f, 0.2f, 0.2f, 0.8f
     };
 
     uint32_t indices[3] {
@@ -41,7 +41,7 @@ void SandboxLayer::on_attach() {
             layout (location = 1) in vec3 color;
             out vec3 vertexColor;
             void main() {
-                gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+                gl_Position = vec4(aPos, 1.0);
                 vertexColor = color;
             }
         )";
