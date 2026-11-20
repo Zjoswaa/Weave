@@ -1,5 +1,6 @@
 #include "sandbox_layer.h"
 #include "weave/core/log.h"
+#include "weave/core/version.h"
 
 #include <glad/glad.h>
 #include <imgui.h>
@@ -94,9 +95,13 @@ void SandboxLayer::on_imgui_render() {
         ImGui::ShowDemoWindow(&show_demo_window);
     }
 
-    static ImVec4 color(0.f, 0.f, 0.f, 1.f);
+    ImGui::Begin("Renderer", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Text("Vendor: %s", glGetString(GL_VENDOR));
+    ImGui::Text("Renderer: %s", glGetString(GL_RENDERER));
+    ImGui::Text("Version: %s", glGetString(GL_VERSION));
+    ImGui::End();
 
-    ImGui::Begin("Window");
-    ImGui::ColorPicker4("Fav color", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
+    ImGui::Begin("Weave", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Text("Version: %s", WEAVE_VERSION);
     ImGui::End();
 }
