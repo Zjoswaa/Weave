@@ -17,7 +17,9 @@ namespace Weave {
         MouseButtonPress,
         MouseButtonRelease,
         MouseMove,
-        MouseScroll
+        MouseScroll,
+        ControllerConnect,
+        ControllerDisconnect
     };
 
     enum class EventCategory : uint32_t {
@@ -25,7 +27,8 @@ namespace Weave {
         Application = BIT(0),
         Input = BIT(1),
         Keyboard = BIT(2),
-        Mouse = BIT(3)
+        Mouse = BIT(3),
+        Controller = BIT(4)
     };
 
     [[nodiscard]] constexpr EventCategory operator|(EventCategory lhs, EventCategory rhs) {
