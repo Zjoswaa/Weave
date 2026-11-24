@@ -1,12 +1,26 @@
 #include "weave/PCH.h"
+#include "weave/core/log.h"
+#include "weave/renderer/renderer.h"
 #include "weave/imgui/imgui_layer.h"
 #include "weave/platform/opengl/opengl_imgui_layer.h"
 
 #include "imgui.h"
 
+
 namespace Weave {
     ImGuiLayer* ImGuiLayer::create() {
-        return new Weave::OpenGL::ImGuiLayer();
+        switch (Renderer::get_renderer_api()) {
+#ifdef WEAVE_HAS_OPENGL
+            case RendererAPI::OpenGL:
+                return new Weave::OpenGL::ImGuiLayer();
+#endif
+            case RendererAPI::None:
+                WEAVE_LOG_CORE_CRITICAL_TAG("Renderer", "RendererAPI::None selected when creating imgui layer");
+                return nullptr;
+            default:
+                WEAVE_LOG_CORE_CRITICAL_TAG("Renderer", "Invalid RendererAPI selected when creating imgui layer");
+                return nullptr;
+        }
     }
 
     void ImGuiLayer::set_custom_dark_theme() {

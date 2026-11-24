@@ -2,6 +2,8 @@
 #define WEAVE_SANDBOX_LAYER_H
 
 #include "weave/core/layer.h"
+#include "weave/renderer/index_buffer.h"
+#include "weave/renderer/vertex_buffer.h"
 
 class SandboxLayer : public Weave::Layer {
 public:
@@ -16,8 +18,8 @@ public:
 
 private:
     unsigned int VAO = 0;
-    unsigned int VBO = 0;
-    unsigned int IBO = 0;
+    std::unique_ptr<Weave::VertexBuffer> vertex_buffer;
+    std::unique_ptr<Weave::IndexBuffer> index_buffer;
     unsigned int shader_program = 0;
 };
 
