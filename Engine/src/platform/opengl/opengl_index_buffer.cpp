@@ -8,7 +8,7 @@ namespace Weave::OpenGL {
 
         glGenBuffers(1, &this->id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(count * sizeof(uint32_t)), indices, GL_STATIC_DRAW);
     }
 
     IndexBuffer::~IndexBuffer() {
