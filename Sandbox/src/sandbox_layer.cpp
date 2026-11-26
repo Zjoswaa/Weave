@@ -1,6 +1,7 @@
 #include "sandbox_layer.h"
 #include "weave/core/log.h"
 #include "weave/core/version.h"
+#include "weave/renderer/buffer_layout.h"
 #include "weave/renderer/vertex_buffer.h"
 
 #include <glad/glad.h>
@@ -9,35 +10,46 @@
 SandboxLayer::SandboxLayer() : Weave::Layer("SandboxLayer") { }
 
 void SandboxLayer::on_attach() {
-    float vertices[6 * 3] = {
-        -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.2f,
-         0.5f, -0.5f, 0.0f, 0.2f, 0.8f, 0.2f,
-         0.0f,  0.5f, 0.0f, 0.2f, 0.2f, 0.8f
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    float vertices[7 * 3] = {
+        -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.2f, 1.f,
+         0.5f, -0.5f, 0.0f, 0.2f, 0.8f, 0.2f, 1.f,
+         0.0f,  0.5f, 0.0f, 0.2f, 0.2f, 0.8f, 1.f
     };
+    this->vertex_buffer.reset(Weave::VertexBuffer::create(vertices, sizeof(vertices)));
+
+    {
+        Weave::BufferLayout layout = {
+            { Weave::ShaderDataType::Float3, "aPos" },
+            { Weave::ShaderDataType::Float4, "aColor" }
+        };
+
+        this->vertex_buffer->set_layout(layout);
+    }
+
+    uint32_t index = 0;
+    const Weave::BufferLayout& layout = this->vertex_buffer->get_layout();
+    for (const Weave::BufferElement& element : layout) {
+        glEnableVertexAttribArray(index);
+        glVertexAttribPointer(index, static_cast<GLint>(element.get_component_count()), element.get_opengl_type(), element.normalized ? GL_TRUE : GL_FALSE, static_cast<GLsizei>(layout.get_stride()), (const void*)element.offset);
+        index++;
+    }
 
     uint32_t indices[3] {
         0, 1, 2
     };
-
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    this->vertex_buffer.reset(Weave::VertexBuffer::create(vertices, sizeof(vertices)));
     this->index_buffer.reset(Weave::IndexBuffer::create(indices, 3));
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(GLfloat) * 3));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
     const char* vertex_shader_source = R"(
             #version 330 core
             layout (location = 0) in vec3 aPos;
-            layout (location = 1) in vec3 color;
-            out vec3 vertexColor;
+            layout (location = 1) in vec4 aColor;
+            out vec4 vertexColor;
             void main() {
                 gl_Position = vec4(aPos, 1.0);
-                vertexColor = color;
+                vertexColor = aColor;
             }
         )";
     unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -47,9 +59,9 @@ void SandboxLayer::on_attach() {
     const char* fragment_shader_source = R"(
             #version 330 core
             out vec4 FragColor;
-            in vec3 vertexColor;
+            in vec4 vertexColor;
             void main() {
-                FragColor = vec4(vertexColor, 1.0f);
+                FragColor = vertexColor;
             }
         )";
     unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
